@@ -1,0 +1,15 @@
+# Package Manager
+packageManager: yarn
+
+# Version Requirements
+nodeVersion: ">=18.0.0"
+
+# Dependency Management
+useWorkspaces: true
+npmClient: yarn
+
+# Project Structure
+workspaces:
+  - "mobile-app"
+  - "backend"
+  - "dashboard" 

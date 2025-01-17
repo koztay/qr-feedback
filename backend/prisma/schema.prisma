@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MUNICIPALITY_ADMIN
+}
+
+enum FeedbackStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+enum FeedbackCategory {
+  INFRASTRUCTURE
+  SAFETY
+  CLEANLINESS
+  OTHER
+}
+
+enum SubscriptionPlan {
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  FAILED
+}
+
+enum NotificationType {
+  FEEDBACK_STATUS
+  FEEDBACK_COMMENT
+  SYSTEM
+}
+
+model User {
+  id            String           @id @default(uuid())
+  email         String           @unique
+  password      String
+  role          UserRole         @default(USER)
+  name          String
+  phone         String?
+  municipalityId String?
+  municipality  Municipality?    @relation(fields: [municipalityId], references: [id])
+  feedback      Feedback[]
+  comments      FeedbackComment[]
+  notifications Notification[]
+  refreshTokens RefreshToken[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([email])
+  @@index([municipalityId])
+}
+
+model Municipality {
+  id                String        @id @default(uuid())
+  name              String
+  city              String
+  state             String
+  country           String
+  contactEmail      String
+  contactPhone      String?
+  subscriptionStatus SubscriptionStatus @default(PENDING)
+  users            User[]
+  feedback         Feedback[]
+  subscriptions    Subscription[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([city])
+  @@index([subscriptionStatus])
+}
+
+model Feedback {
+  id            String           @id @default(uuid())
+  description   String
+  category      FeedbackCategory
+  location      Json
+  address       String
+  images        String[]
+  status        FeedbackStatus   @default(PENDING)
+  userId        String
+  user          User             @relation(fields: [userId], references: [id])
+  municipalityId String
+  municipality  Municipality     @relation(fields: [municipalityId], references: [id])
+  comments      FeedbackComment[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([municipalityId])
+  @@index([status])
+  @@index([category])
+}
+
+model FeedbackComment {
+  id          String    @id @default(uuid())
+  comment     String
+  feedbackId  String
+  feedback    Feedback  @relation(fields: [feedbackId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([feedbackId])
+  @@index([userId])
+}
+
+model Notification {
+  id          String          @id @default(uuid())
+  type        NotificationType
+  title       String
+  body        String
+  data        Json?
+  read        Boolean         @default(false)
+  readAt      DateTime?
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([read])
+}
+
+model Subscription {
+  id            String            @id @default(uuid())
+  municipalityId String
+  municipality  Municipality      @relation(fields: [municipalityId], references: [id])
+  plan          SubscriptionPlan
+  validUntil    DateTime
+  status        SubscriptionStatus @default(PENDING)
+  paymentStatus PaymentStatus     @default(PENDING)
+  paymentMethod String?
+  amount        Float
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([municipalityId])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+} 
