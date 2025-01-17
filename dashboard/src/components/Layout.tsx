@@ -23,7 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <AppBar position="static">
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              {user?.municipality?.name || 'Municipality Dashboard'}
+              QR Feedback
             </Typography>
             <Button
               color="inherit"

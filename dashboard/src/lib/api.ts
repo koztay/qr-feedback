@@ -45,8 +45,24 @@ export interface DashboardStats {
 }
 
 export const getDashboardStats = async (municipalityId: string): Promise<DashboardStats> => {
-  const response = await api.get(`/analytics/municipalities/${municipalityId}/statistics`);
-  return response.data;
+  // Get current date range (last 30 days by default)
+  const endDate = new Date().toISOString();
+  const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const response = await api.get(`/analytics/municipalities/${municipalityId}/statistics`, {
+    params: {
+      startDate,
+      endDate
+    }
+  });
+  return {
+    totalFeedback: response.data.totalFeedback || 0,
+    openIssues: response.data.feedbackByStatus?.PENDING || 0,
+    resolvedIssues: response.data.feedbackByStatus?.RESOLVED || 0,
+    averageResolutionTime: response.data.averageResolutionTime || 0,
+    feedbackByCategory: response.data.feedbackByCategory || {},
+    statusDistribution: response.data.feedbackByStatus || {}
+  };
 };
 
 export const getFeedbackSummary = async (municipalityId: string) => {

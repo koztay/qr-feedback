@@ -79,7 +79,7 @@ export const requireMunicipalityAccess = async (req: Request, res: Response, nex
       return next();
     }
 
-    const municipalityId = req.params.municipalityId || req.body.municipalityId;
+    const municipalityId = req.params.municipalityId || req.params.id || req.body.municipalityId;
 
     if (!municipalityId) {
       return res.status(400).json({ error: 'Municipality ID is required' });

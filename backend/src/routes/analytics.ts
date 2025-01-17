@@ -7,9 +7,9 @@ const router = Router();
 
 // Validation schema for date range
 const dateRangeSchema = z.object({
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional()
-});
+  startDate: z.string().optional(),
+  endDate: z.string().optional()
+}).optional();
 
 /**
  * @swagger
@@ -46,7 +46,17 @@ router.get('/municipalities/:id/statistics',
     try {
       const { id } = req.params;
       console.log('Fetching statistics for municipality:', id);
-      const { startDate, endDate } = dateRangeSchema.parse(req.query);
+      console.log('Query params:', req.query);
+      
+      const parsedQuery = dateRangeSchema.safeParse(req.query);
+      if (!parsedQuery.success) {
+        console.error('Validation error:', parsedQuery.error);
+        return res.status(400).json({ error: parsedQuery.error.errors });
+      }
+
+      const data = parsedQuery.data || {};
+      const startDate = data.startDate;
+      const endDate = data.endDate;
 
       const whereClause: any = {
         municipalityId: id
@@ -184,7 +194,9 @@ router.get('/municipalities/:id/feedback/summary',
         where: whereClause,
         _count: true,
         orderBy: {
-          _count: 'desc'
+          _count: {
+            _all: 'desc'
+          }
         }
       });
 

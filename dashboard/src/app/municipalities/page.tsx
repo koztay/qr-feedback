@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -45,11 +45,12 @@ export default function MunicipalitiesPage() {
   const { user } = useAuth();
   const { data: municipalities, error } = useSWR<Municipality[]>('municipalities', fetchMunicipalities);
 
-  // Check if user has access to municipalities page
-  if (user?.role === 'MUNICIPALITY_ADMIN' && user.municipalityId !== municipalities?.[0]?.id) {
-    router.push('/');
-    return null;
-  }
+  useEffect(() => {
+    // Check if user has access to municipalities page
+    if (user?.role === 'MUNICIPALITY_ADMIN' && municipalities && user.municipalityId !== municipalities[0]?.id) {
+      router.push('/');
+    }
+  }, [user, municipalities, router]);
 
   if (error) {
     return (
