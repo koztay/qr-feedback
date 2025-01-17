@@ -1,214 +1,147 @@
 'use client';
 
 import React from 'react';
-import { Box, Container, Typography, Paper, Grid, CircularProgress } from '@mui/material';
-import { BarChart as BarChartIcon, PieChart as PieChartIcon } from '@mui/icons-material';
-import { Bar, Pie } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from 'chart.js';
+  Container,
+  Typography,
+  Grid,
+  Paper,
+  Box,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
-import { getDashboardStats, DashboardStats } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
+import api from '@/lib/api';
 
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
+interface DashboardStats {
+  totalFeedback: number;
+  openIssues: number;
+  resolvedIssues: number;
+  averageResolutionTime: number;
+  feedbackByCategory: Record<string, number>;
+  statusDistribution: Record<string, number>;
+}
 
-// TODO: Replace with actual municipality ID from auth context
-const MUNICIPALITY_ID = '1';
+interface Municipality {
+  id: string;
+  name: string;
+  city: string;
+}
 
-export default function Home() {
-  const { data: stats, error, isLoading } = useSWR<DashboardStats>(
-    ['dashboard-stats', MUNICIPALITY_ID],
-    () => getDashboardStats(MUNICIPALITY_ID)
-  );
+const fetchDashboardStats = async (municipalityId: string) => {
+  const response = await api.get(`/analytics/municipalities/${municipalityId}/statistics`);
+  return response.data;
+};
+
+const fetchMunicipality = async (municipalityId: string) => {
+  const response = await api.get(`/municipalities/${municipalityId}`);
+  return response.data;
+};
+
+export default function DashboardPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const municipalityId = searchParams.get('municipalityId') || user?.municipalityId;
 
-  const categoryChartData = {
-    labels: stats?.feedbackByCategory.map(item => item.category) || [],
-    datasets: [
-      {
-        label: 'Number of Feedback',
-        data: stats?.feedbackByCategory.map(item => item.count) || [],
-        backgroundColor: 'rgba(25, 118, 210, 0.5)',
-        borderColor: 'rgba(25, 118, 210, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
+  const { data: stats, error: statsError } = useSWR<DashboardStats>(
+    municipalityId ? ['dashboardStats', municipalityId] : null,
+    () => fetchDashboardStats(municipalityId!)
+  );
 
-  const statusChartData = {
-    labels: stats?.statusDistribution.map(item => item.status) || [],
-    datasets: [
-      {
-        data: stats?.statusDistribution.map(item => item.count) || [],
-        backgroundColor: [
-          'rgba(25, 118, 210, 0.5)',
-          'rgba(220, 0, 78, 0.5)',
-          'rgba(76, 175, 80, 0.5)',
-        ],
-        borderColor: [
-          'rgba(25, 118, 210, 1)',
-          'rgba(220, 0, 78, 1)',
-          'rgba(76, 175, 80, 1)',
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
+  const { data: municipality, error: municipalityError } = useSWR<Municipality>(
+    municipalityId ? ['municipality', municipalityId] : null,
+    () => fetchMunicipality(municipalityId!)
+  );
 
-  if (error) {
+  if (!municipalityId) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography color="error">Error loading dashboard data</Typography>
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Alert severity="info">Please select a municipality to view its dashboard.</Alert>
+      </Container>
+    );
+  }
+
+  if (statsError || municipalityError) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Alert severity="error">Failed to load dashboard data</Alert>
+      </Container>
+    );
+  }
+
+  if (!stats || !municipality) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <CircularProgress />
+        </Box>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Municipality Dashboard
+        {municipality.name} Dashboard
       </Typography>
-      
-      <Grid container spacing={3}>
-        {/* Summary Cards */}
-        <Grid item xs={12} md={4}>
-          <Paper
-            sx={{
-              p: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              height: 140,
-            }}
-          >
-            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-              Total Feedback
-            </Typography>
-            {isLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <Typography component="p" variant="h4">
-                {stats?.totalFeedback || 0}
-              </Typography>
-            )}
+      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+        {municipality.city}
+      </Typography>
+
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Typography variant="h6">Total Feedback</Typography>
+            <Typography variant="h4">{stats.totalFeedback || 0}</Typography>
           </Paper>
         </Grid>
-        
-        <Grid item xs={12} md={4}>
-          <Paper
-            sx={{
-              p: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              height: 140,
-            }}
-          >
-            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-              Open Issues
-            </Typography>
-            {isLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <Typography component="p" variant="h4">
-                {stats?.openIssues || 0}
-              </Typography>
-            )}
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Typography variant="h6">Open Issues</Typography>
+            <Typography variant="h4">{stats.openIssues || 0}</Typography>
           </Paper>
         </Grid>
-        
-        <Grid item xs={12} md={4}>
-          <Paper
-            sx={{
-              p: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              height: 140,
-            }}
-          >
-            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-              Resolved Issues
-            </Typography>
-            {isLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
-                <CircularProgress />
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Typography variant="h6">Resolved Issues</Typography>
+            <Typography variant="h4">{stats.resolvedIssues || 0}</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Typography variant="h6">Avg. Resolution Time</Typography>
+            <Typography variant="h4">{Math.round(stats.averageResolutionTime || 0)} days</Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>Feedback by Category</Typography>
+            {stats.feedbackByCategory && Object.entries(stats.feedbackByCategory).map(([category, count]) => (
+              <Box key={category} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography>{category}</Typography>
+                <Typography>{count}</Typography>
               </Box>
-            ) : (
-              <Typography component="p" variant="h4">
-                {stats?.resolvedIssues || 0}
-              </Typography>
+            ))}
+            {(!stats.feedbackByCategory || Object.keys(stats.feedbackByCategory).length === 0) && (
+              <Typography color="text.secondary">No feedback categories available</Typography>
             )}
           </Paper>
         </Grid>
 
-        {/* Charts */}
         <Grid item xs={12} md={6}>
-          <Paper
-            sx={{
-              p: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              height: 240,
-            }}
-          >
-            {isLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                <CircularProgress />
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>Status Distribution</Typography>
+            {stats.statusDistribution && Object.entries(stats.statusDistribution).map(([status, count]) => (
+              <Box key={status} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography>{status}</Typography>
+                <Typography>{count}</Typography>
               </Box>
-            ) : stats?.feedbackByCategory.length ? (
-              <Bar data={categoryChartData} options={{ responsive: true, maintainAspectRatio: false }} />
-            ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                <BarChartIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary">
-                  No Category Data Available
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <Paper
-            sx={{
-              p: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              height: 240,
-            }}
-          >
-            {isLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                <CircularProgress />
-              </Box>
-            ) : stats?.statusDistribution.length ? (
-              <Pie data={statusChartData} options={{ responsive: true, maintainAspectRatio: false }} />
-            ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                <PieChartIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary">
-                  No Status Data Available
-                </Typography>
-              </Box>
+            ))}
+            {(!stats.statusDistribution || Object.keys(stats.statusDistribution).length === 0) && (
+              <Typography color="text.secondary">No status data available</Typography>
             )}
           </Paper>
         </Grid>

@@ -5,9 +5,8 @@ import './globals.css';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { AuthProvider } from '@/lib/auth';
+import { AuthProvider } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
-import { Box, CircularProgress } from '@mui/material';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,16 +25,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AppRouterCacheProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <AppRouterCacheProvider>
             <ThemeProvider theme={theme}>
               <CssBaseline />
               <Layout>
                 {children}
               </Layout>
             </ThemeProvider>
-          </AuthProvider>
-        </AppRouterCacheProvider>
+          </AppRouterCacheProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -50,14 +50,13 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Rate limiting
-const limiter: RateLimitRequestHandler = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Allow more requests per window
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
 });
-
-app.use('/api', limiter);
 
 // Swagger configuration
 const swaggerOptions: swaggerJsdoc.Options = {
@@ -117,6 +116,9 @@ const swaggerSetup = swaggerUi.setup(swaggerSpec, {
 
 app.use(`/api/${apiVersion}/docs`, swaggerUi.serve);
 app.get(`/api/${apiVersion}/docs`, swaggerSetup);
+
+// Apply rate limiting to auth routes
+apiRouter.use('/auth', authLimiter);
 
 // API Routes
 apiRouter.use('/auth', authRoutes);

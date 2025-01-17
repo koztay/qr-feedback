@@ -39,34 +39,14 @@ export interface DashboardStats {
   totalFeedback: number;
   openIssues: number;
   resolvedIssues: number;
-  feedbackByCategory: {
-    category: string;
-    count: number;
-  }[];
-  statusDistribution: {
-    status: string;
-    count: number;
-  }[];
+  averageResolutionTime: number;
+  feedbackByCategory: Record<string, number>;
+  statusDistribution: Record<string, number>;
 }
 
 export const getDashboardStats = async (municipalityId: string): Promise<DashboardStats> => {
-  const response = await api.get('/auth/me');
-  const user = response.data;
-  
-  const statsResponse = await api.get(`/analytics/municipalities/${municipalityId}/statistics`);
-  return {
-    totalFeedback: statsResponse.data.totalFeedback || 0,
-    openIssues: statsResponse.data.feedbackByStatus?.PENDING || 0,
-    resolvedIssues: statsResponse.data.feedbackByStatus?.RESOLVED || 0,
-    feedbackByCategory: Object.entries(statsResponse.data.feedbackByCategory || {}).map(([category, count]) => ({
-      category,
-      count: count as number,
-    })),
-    statusDistribution: Object.entries(statsResponse.data.feedbackByStatus || {}).map(([status, count]) => ({
-      status,
-      count: count as number,
-    })),
-  };
+  const response = await api.get(`/analytics/municipalities/${municipalityId}/statistics`);
+  return response.data;
 };
 
 export const getFeedbackSummary = async (municipalityId: string) => {

@@ -3,7 +3,7 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button } from '@mui/material';
 import { Logout as LogoutIcon } from '@mui/icons-material';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -28,14 +28,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Button
               color="inherit"
               sx={{ mr: 2 }}
-              href="/municipalities"
+              onClick={() => router.push('/municipalities')}
             >
               Municipalities
             </Button>
             <Button
               color="inherit"
               sx={{ mr: 2 }}
-              href="/users"
+              onClick={() => router.push('/users')}
             >
               Users
             </Button>

@@ -14,9 +14,11 @@ import {
   Button,
   Box,
   CircularProgress,
+  Alert,
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
+import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
 
 interface Municipality {
@@ -27,9 +29,9 @@ interface Municipality {
   country: string;
   contactEmail: string;
   subscriptionStatus: string;
-  _count: {
-    feedback: number;
+  _count?: {
     users: number;
+    feedback: number;
   };
 }
 
@@ -39,77 +41,102 @@ const fetchMunicipalities = async () => {
 };
 
 export default function MunicipalitiesPage() {
-  const { data: municipalities, error, isLoading } = useSWR<Municipality[]>('municipalities', fetchMunicipalities);
+  const router = useRouter();
+  const { user } = useAuth();
+  const { data: municipalities, error } = useSWR<Municipality[]>('municipalities', fetchMunicipalities);
+
+  // Check if user has access to municipalities page
+  if (user?.role === 'MUNICIPALITY_ADMIN' && user.municipalityId !== municipalities?.[0]?.id) {
+    router.push('/');
+    return null;
+  }
 
   if (error) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Typography color="error">Error loading municipalities</Typography>
+        <Alert severity="error">Failed to load municipalities</Alert>
+      </Container>
+    );
+  }
+
+  if (!municipalities) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <CircularProgress />
+        </Box>
       </Container>
     );
   }
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4" component="h1">
           Municipalities
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          href="/municipalities/new"
-        >
-          Add Municipality
-        </Button>
+        {user?.role === 'ADMIN' && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => router.push('/municipalities/new')}
+          >
+            Add Municipality
+          </Button>
+        )}
       </Box>
 
       <TableContainer component={Paper}>
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>City</TableCell>
-                <TableCell>State</TableCell>
-                <TableCell>Country</TableCell>
-                <TableCell>Contact Email</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Users</TableCell>
-                <TableCell>Feedback</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {municipalities?.map((municipality) => (
-                <TableRow key={municipality.id}>
-                  <TableCell>{municipality.name}</TableCell>
-                  <TableCell>{municipality.city}</TableCell>
-                  <TableCell>{municipality.state}</TableCell>
-                  <TableCell>{municipality.country}</TableCell>
-                  <TableCell>{municipality.contactEmail}</TableCell>
-                  <TableCell>{municipality.subscriptionStatus}</TableCell>
-                  <TableCell>{municipality._count.users}</TableCell>
-                  <TableCell>{municipality._count.feedback}</TableCell>
-                  <TableCell>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>City</TableCell>
+              <TableCell>State</TableCell>
+              <TableCell>Country</TableCell>
+              <TableCell>Contact Email</TableCell>
+              <TableCell>Subscription Status</TableCell>
+              <TableCell>Users</TableCell>
+              <TableCell>Feedback</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {municipalities.map((municipality) => (
+              <TableRow key={municipality.id}>
+                <TableCell>{municipality.name}</TableCell>
+                <TableCell>{municipality.city}</TableCell>
+                <TableCell>{municipality.state}</TableCell>
+                <TableCell>{municipality.country}</TableCell>
+                <TableCell>{municipality.contactEmail}</TableCell>
+                <TableCell>{municipality.subscriptionStatus}</TableCell>
+                <TableCell>{municipality._count?.users || 0}</TableCell>
+                <TableCell>{municipality._count?.feedback || 0}</TableCell>
+                <TableCell align="right">
+                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                     <Button
-                      variant="outlined"
+                      variant="contained"
+                      color="primary"
                       size="small"
-                      href={`/municipalities/${municipality.id}`}
+                      onClick={() => router.push(`/?municipalityId=${municipality.id}`)}
                     >
-                      Edit
+                      View Dashboard
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+                    {user?.role === 'ADMIN' && (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => router.push(`/municipalities/${municipality.id}`)}
+                      >
+                        Edit
+                      </Button>
+                    )}
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </TableContainer>
     </Container>
   );
