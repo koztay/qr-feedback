@@ -45,6 +45,7 @@ router.get('/municipalities/:id/statistics',
   async (req, res) => {
     try {
       const { id } = req.params;
+      console.log('Fetching statistics for municipality:', id);
       const { startDate, endDate } = dateRangeSchema.parse(req.query);
 
       const whereClause: any = {
@@ -57,68 +58,76 @@ router.get('/municipalities/:id/statistics',
         if (endDate) whereClause.createdAt.lte = new Date(endDate);
       }
 
-      const [
+      console.log('Using where clause:', whereClause);
+
+      // Get total feedback count
+      const totalFeedback = await prisma.feedback.count({
+        where: whereClause
+      });
+
+      // Get feedback by status
+      const feedbackByStatus = await prisma.feedback.findMany({
+        where: whereClause,
+        select: {
+          status: true,
+        }
+      });
+
+      // Get feedback by category
+      const feedbackByCategory = await prisma.feedback.findMany({
+        where: whereClause,
+        select: {
+          category: true,
+        }
+      });
+
+      // Calculate average resolution time
+      const resolvedFeedback = await prisma.feedback.findMany({
+        where: {
+          ...whereClause,
+          status: 'RESOLVED'
+        },
+        select: {
+          createdAt: true,
+          updatedAt: true
+        }
+      });
+
+      const averageResolutionTime = resolvedFeedback.length === 0 ? 0 :
+        resolvedFeedback.reduce((sum, f) => 
+          sum + (f.updatedAt.getTime() - f.createdAt.getTime()), 0) / 
+        resolvedFeedback.length / (1000 * 60 * 60);
+
+      // Count status occurrences
+      const statusCounts = feedbackByStatus.reduce((acc: Record<string, number>, item) => {
+        acc[item.status] = (acc[item.status] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Count category occurrences
+      const categoryCounts = feedbackByCategory.reduce((acc: Record<string, number>, item) => {
+        acc[item.category] = (acc[item.category] || 0) + 1;
+        return acc;
+      }, {});
+
+      console.log('Statistics results:', {
         totalFeedback,
-        feedbackByStatus,
-        feedbackByCategory,
+        statusCounts,
+        categoryCounts,
         averageResolutionTime
-      ] = await Promise.all([
-        // Total feedback count
-        prisma.feedback.count({
-          where: whereClause
-        }),
-
-        // Feedback count by status
-        prisma.feedback.groupBy({
-          by: ['status'],
-          where: whereClause,
-          _count: true
-        }),
-
-        // Feedback count by category
-        prisma.feedback.groupBy({
-          by: ['category'],
-          where: whereClause,
-          _count: true
-        }),
-
-        // Average resolution time for resolved feedback
-        prisma.feedback.findMany({
-          where: {
-            ...whereClause,
-            status: 'RESOLVED'
-          },
-          select: {
-            createdAt: true,
-            updatedAt: true
-          }
-        }).then(feedback => {
-          if (feedback.length === 0) return 0;
-          const totalTime = feedback.reduce((sum, f) => 
-            sum + (f.updatedAt.getTime() - f.createdAt.getTime()), 0);
-          return totalTime / feedback.length / (1000 * 60 * 60); // Convert to hours
-        })
-      ]);
+      });
 
       res.json({
         totalFeedback,
-        feedbackByStatus: Object.fromEntries(
-          feedbackByStatus.map(f => [f.status, f._count])
-        ),
-        feedbackByCategory: Object.fromEntries(
-          feedbackByCategory.map(f => [f.category, f._count])
-        ),
-        averageResolutionTime: Math.round(averageResolutionTime * 100) / 100, // Round to 2 decimal places
-        dateRange: {
-          startDate: startDate ? new Date(startDate) : null,
-          endDate: endDate ? new Date(endDate) : null
-        }
+        feedbackByStatus: statusCounts,
+        feedbackByCategory: categoryCounts,
+        averageResolutionTime: Math.round(averageResolutionTime * 100) / 100
       });
     } catch (error) {
+      console.error('Error fetching statistics:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: error.errors });
       }
-      console.error('Get statistics error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
 });

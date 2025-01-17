@@ -35,28 +35,29 @@ app.use(
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false
   })
-); // Security headers with Swagger UI exceptions
+);
 
 // CORS configuration
-app.use(cors({
+const corsOptions: cors.CorsOptions = {
   origin: process.env.CORS_ORIGIN,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
-}));
+};
 
-app.use(express.json()); // Parse JSON bodies
-app.use(morgan('dev')); // Request logging
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(morgan('dev'));
 
 // Rate limiting
 const limiter: RateLimitRequestHandler = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false
 });
 
-app.use('/api', limiter); // Apply rate limiting to API routes only
+app.use('/api', limiter);
 
 // Swagger configuration
 const swaggerOptions: swaggerJsdoc.Options = {
@@ -108,12 +109,14 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // API Documentation
-app.use(`/api/${apiVersion}/docs`, swaggerUi.serve as express.RequestHandler);
-app.get(`/api/${apiVersion}/docs`, swaggerUi.setup(swaggerSpec, {
+const swaggerSetup = swaggerUi.setup(swaggerSpec, {
   explorer: true,
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'Municipal AR Feedback API Documentation'
-}) as express.RequestHandler);
+});
+
+app.use(`/api/${apiVersion}/docs`, swaggerUi.serve);
+app.get(`/api/${apiVersion}/docs`, swaggerSetup);
 
 // API Routes
 apiRouter.use('/auth', authRoutes);
