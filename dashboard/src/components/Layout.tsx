@@ -1,0 +1,55 @@
+'use client';
+
+import React from 'react';
+import { AppBar, Toolbar, Typography, Button } from '@mui/material';
+import { Logout as LogoutIcon } from '@mui/icons-material';
+import { useAuth } from '@/lib/auth';
+import { useRouter, usePathname } from 'next/navigation';
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  const { logout, user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const isLoginPage = pathname === '/login';
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
+
+  return (
+    <>
+      {!isLoginPage && user && (
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              {user?.municipality?.name || 'Municipality Dashboard'}
+            </Typography>
+            <Button
+              color="inherit"
+              sx={{ mr: 2 }}
+              href="/municipalities"
+            >
+              Municipalities
+            </Button>
+            <Button
+              color="inherit"
+              sx={{ mr: 2 }}
+              href="/users"
+            >
+              Users
+            </Button>
+            <Button
+              color="inherit"
+              onClick={handleLogout}
+              startIcon={<LogoutIcon />}
+            >
+              Logout
+            </Button>
+          </Toolbar>
+        </AppBar>
+      )}
+      {children}
+    </>
+  );
+} 
