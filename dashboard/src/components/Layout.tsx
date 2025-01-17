@@ -11,6 +11,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
+  const isAdmin = user?.role === 'ADMIN';
 
   const handleLogout = () => {
     logout();
@@ -25,20 +26,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               QR Feedback
             </Typography>
-            <Button
-              color="inherit"
-              sx={{ mr: 2 }}
-              onClick={() => router.push('/municipalities')}
-            >
-              Municipalities
-            </Button>
-            <Button
-              color="inherit"
-              sx={{ mr: 2 }}
-              onClick={() => router.push('/users')}
-            >
-              Users
-            </Button>
+            {isAdmin && (
+              <>
+                <Button
+                  color="inherit"
+                  sx={{ mr: 2 }}
+                  onClick={() => router.push('/municipalities')}
+                >
+                  Municipalities
+                </Button>
+                <Button
+                  color="inherit"
+                  sx={{ mr: 2 }}
+                  onClick={() => router.push('/users')}
+                >
+                  Users
+                </Button>
+              </>
+            )}
             <Button
               color="inherit"
               onClick={handleLogout}
