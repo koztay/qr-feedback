@@ -256,14 +256,26 @@ router.get('/:id/comments', authenticateToken, async (req, res) => {
   }
 });
 
-// Update feedback status (admin only)
-router.patch('/:id/status', authenticateToken, requireRole(['ADMIN']), async (req, res) => {
+// Update feedback status (admin and municipality admin)
+router.patch('/:id/status', authenticateToken, requireRole(['ADMIN', 'MUNICIPALITY_ADMIN']), async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
     if (!['PENDING', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    // For municipality admin, check if they have access to this feedback
+    if (req.user.role === 'MUNICIPALITY_ADMIN') {
+      const feedback = await prisma.feedback.findUnique({
+        where: { id },
+        select: { municipalityId: true }
+      });
+
+      if (!feedback || feedback.municipalityId !== req.user.municipalityId) {
+        return res.status(403).json({ error: 'Access denied to this feedback' });
+      }
     }
 
     const feedback = await prisma.feedback.update({

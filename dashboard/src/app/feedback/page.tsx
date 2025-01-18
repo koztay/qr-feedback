@@ -88,7 +88,16 @@ export default function FeedbackPage() {
   const [newStatus, setNewStatus] = useState<Feedback['status']>('PENDING');
   const [newCategory, setNewCategory] = useState<Feedback['category']>('INFRASTRUCTURE');
 
-  // Fetch feedback based on user role and municipality
+  // Check if the user can update this specific feedback
+  const canUpdateFeedback = (feedback: Feedback) => {
+    if (user?.role === 'ADMIN') return true;
+    if (user?.role === 'MUNICIPALITY_ADMIN') {
+      return feedback.municipality.id === user.municipalityId;
+    }
+    return false;
+  };
+
+  // MUNICIPALITY_ADMIN can only see and update their municipality's feedback
   const feedbackUrl = user?.role === 'MUNICIPALITY_ADMIN' && user?.municipalityId
     ? `/feedback?municipalityId=${user.municipalityId}`
     : '/feedback';
@@ -100,21 +109,22 @@ export default function FeedbackPage() {
 
   const handleStatusUpdate = async () => {
     if (!selectedFeedback) return;
+    if (!canUpdateFeedback(selectedFeedback)) {
+      alert('You do not have permission to update this feedback');
+      return;
+    }
 
     try {
       await api.patch(`/feedback/${selectedFeedback.id}/status`, { status: newStatus });
-
-      // Add system comment about status change
       await api.post(`/feedback/${selectedFeedback.id}/comments`, { comment: `Status updated to ${newStatus}` });
-
-      // Refresh feedback data
       mutate(feedbackUrl);
       
-      // Refresh the selected feedback to show the updated status and new comment
-      const updatedFeedback = await api.get(`/feedback/${selectedFeedback.id}`);
-      setSelectedFeedback(updatedFeedback.data);
-    } catch (error) {
+      const response = await api.get(`/feedback/${selectedFeedback.id}`);
+      setSelectedFeedback(response.data.data || response.data);
+    } catch (error: any) {
       console.error('Error updating feedback status:', error);
+      const errorMessage = error.response?.data?.message || 'Error updating feedback status';
+      alert(errorMessage);
     }
   };
 
@@ -268,53 +278,59 @@ export default function FeedbackPage() {
                 ))}
               </Box>
 
-              <Typography variant="h6" gutterBottom>
-                Status Update
-              </Typography>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={newStatus}
-                  label="Status"
-                  onChange={(e) => setNewStatus(e.target.value as Feedback['status'])}
-                >
-                  <MenuItem value="PENDING">Pending</MenuItem>
-                  <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
-                  <MenuItem value="RESOLVED">Resolved</MenuItem>
-                  <MenuItem value="REJECTED">Rejected</MenuItem>
-                </Select>
-              </FormControl>
-              <Button
-                variant="contained"
-                onClick={handleStatusUpdate}
-                sx={{ mb: 3 }}
-              >
-                Update Status
-              </Button>
+              {/* Status Update */}
+              {canUpdateFeedback(selectedFeedback) && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Status Update
+                  </Typography>
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                      value={newStatus}
+                      label="Status"
+                      onChange={(e) => setNewStatus(e.target.value as Feedback['status'])}
+                    >
+                      <MenuItem value="PENDING">Pending</MenuItem>
+                      <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
+                      <MenuItem value="RESOLVED">Resolved</MenuItem>
+                      <MenuItem value="REJECTED">Rejected</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <Button variant="contained" onClick={handleStatusUpdate}>
+                    UPDATE STATUS
+                  </Button>
+                </Box>
+              )}
 
-              <Typography variant="h6" gutterBottom>
-                Category Update
-              </Typography>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Category</InputLabel>
-                <Select
-                  value={newCategory}
-                  label="Category"
-                  onChange={(e) => setNewCategory(e.target.value as Feedback['category'])}
-                >
-                  <MenuItem value="INFRASTRUCTURE">Infrastructure</MenuItem>
-                  <MenuItem value="SAFETY">Safety</MenuItem>
-                  <MenuItem value="CLEANLINESS">Cleanliness</MenuItem>
-                  <MenuItem value="OTHER">Other</MenuItem>
-                </Select>
-              </FormControl>
-              <Button
-                variant="contained"
-                onClick={handleCategoryUpdate}
-                sx={{ mb: 3 }}
-              >
-                Update Category
-              </Button>
+              {/* Category Update */}
+              {canUpdateFeedback(selectedFeedback) && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Category Update
+                  </Typography>
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel>Category</InputLabel>
+                    <Select
+                      value={newCategory}
+                      label="Category"
+                      onChange={(e) => setNewCategory(e.target.value as Feedback['category'])}
+                    >
+                      <MenuItem value="INFRASTRUCTURE">Infrastructure</MenuItem>
+                      <MenuItem value="SAFETY">Safety</MenuItem>
+                      <MenuItem value="CLEANLINESS">Cleanliness</MenuItem>
+                      <MenuItem value="OTHER">Other</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <Button
+                    variant="contained"
+                    onClick={handleCategoryUpdate}
+                    sx={{ mb: 3 }}
+                  >
+                    Update Category
+                  </Button>
+                </Box>
+              )}
 
               <Typography variant="h6" gutterBottom>
                 Comments
