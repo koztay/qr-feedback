@@ -327,4 +327,50 @@ router.post('/:id/images', authenticateToken, async (req, res) => {
   }
 });
 
+// Update feedback
+router.patch('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { category } = req.body;
+
+    if (!['INFRASTRUCTURE', 'SAFETY', 'CLEANLINESS', 'OTHER'].includes(category)) {
+      return res.status(400).json({ error: 'Invalid category' });
+    }
+
+    const feedback = await prisma.feedback.update({
+      where: { id },
+      data: { category },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true
+          }
+        },
+        municipality: true,
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
+    });
+
+    res.json(feedback);
+  } catch (error) {
+    console.error('Update feedback error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router; 

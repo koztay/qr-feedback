@@ -86,6 +86,7 @@ export default function FeedbackPage() {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [newComment, setNewComment] = useState('');
   const [newStatus, setNewStatus] = useState<Feedback['status']>('PENDING');
+  const [newCategory, setNewCategory] = useState<Feedback['category']>('INFRASTRUCTURE');
 
   // Fetch feedback based on user role and municipality
   const feedbackUrl = user?.role === 'MUNICIPALITY_ADMIN' && user?.municipalityId
@@ -114,6 +115,26 @@ export default function FeedbackPage() {
       setSelectedFeedback(updatedFeedback.data);
     } catch (error) {
       console.error('Error updating feedback status:', error);
+    }
+  };
+
+  const handleCategoryUpdate = async () => {
+    if (!selectedFeedback) return;
+
+    try {
+      await api.patch(`/feedback/${selectedFeedback.id}`, { category: newCategory });
+
+      // Add system comment about category change
+      await api.post(`/feedback/${selectedFeedback.id}/comments`, { comment: `Category updated to ${newCategory}` });
+
+      // Refresh feedback data
+      mutate(feedbackUrl);
+      
+      // Refresh the selected feedback to show the updated category and new comment
+      const updatedFeedback = await api.get(`/feedback/${selectedFeedback.id}`);
+      setSelectedFeedback(updatedFeedback.data);
+    } catch (error) {
+      console.error('Error updating feedback category:', error);
     }
   };
 
@@ -199,6 +220,7 @@ export default function FeedbackPage() {
                       onClick={() => {
                         setSelectedFeedback(feedback);
                         setNewStatus(feedback.status);
+                        setNewCategory(feedback.category);
                       }}
                     >
                       View Details
@@ -268,6 +290,30 @@ export default function FeedbackPage() {
                 sx={{ mb: 3 }}
               >
                 Update Status
+              </Button>
+
+              <Typography variant="h6" gutterBottom>
+                Category Update
+              </Typography>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={newCategory}
+                  label="Category"
+                  onChange={(e) => setNewCategory(e.target.value as Feedback['category'])}
+                >
+                  <MenuItem value="INFRASTRUCTURE">Infrastructure</MenuItem>
+                  <MenuItem value="SAFETY">Safety</MenuItem>
+                  <MenuItem value="CLEANLINESS">Cleanliness</MenuItem>
+                  <MenuItem value="OTHER">Other</MenuItem>
+                </Select>
+              </FormControl>
+              <Button
+                variant="contained"
+                onClick={handleCategoryUpdate}
+                sx={{ mb: 3 }}
+              >
+                Update Category
               </Button>
 
               <Typography variant="h6" gutterBottom>
