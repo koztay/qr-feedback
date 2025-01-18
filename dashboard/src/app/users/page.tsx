@@ -21,8 +21,7 @@ import useSWR from 'swr';
 import { User, getUsers } from '@/lib/api';
 
 const fetchUsers = async () => {
-  const response = await getUsers();
-  return response.data;
+  return await getUsers();
 };
 
 const getRoleColor = (role: User['role']) => {

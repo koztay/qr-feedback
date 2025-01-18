@@ -47,4 +47,20 @@ api.interceptors.response.use(
   }
 );
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'ADMIN' | 'MUNICIPALITY_ADMIN' | 'USER';
+  municipality?: {
+    id: string;
+    name: string;
+  };
+}
+
+export const getUsers = async () => {
+  const response = await api.get<{ data: User[] }>('/users');
+  return Array.isArray(response.data.data) ? response.data.data : [];
+};
+
 export default api; 
