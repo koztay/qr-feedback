@@ -52,6 +52,7 @@ export interface User {
   name: string;
   email: string;
   role: 'ADMIN' | 'MUNICIPALITY_ADMIN' | 'USER';
+  language: 'TR' | 'EN';
   municipality?: {
     id: string;
     name: string;

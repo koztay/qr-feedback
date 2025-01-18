@@ -19,6 +19,7 @@ import subscriptionRoutes from './routes/subscription';
 import locationRoutes from './routes/location';
 import analyticsRoutes from './routes/analytics';
 import notificationRoutes from './routes/notification';
+import translationsRouter from './routes/translations';
 
 // Initialize Express app
 const app = express();
@@ -129,6 +130,7 @@ apiRouter.use('/subscriptions', subscriptionRoutes);
 apiRouter.use('/location', locationRoutes);
 apiRouter.use('/analytics', analyticsRoutes);
 apiRouter.use('/notifications', notificationRoutes);
+apiRouter.use('/translations', translationsRouter);
 
 // Mount API routes at /api/v1
 app.use(`/api/${apiVersion}`, apiRouter);

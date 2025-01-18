@@ -55,6 +55,11 @@ enum NotificationType {
   SYSTEM
 }
 
+enum Language {
+  TR    // Turkish (default)
+  EN    // English
+}
+
 model User {
   id            String           @id @default(uuid())
   email         String           @unique
@@ -62,6 +67,7 @@ model User {
   role          UserRole         @default(USER)
   name          String
   phone         String?
+  language      Language         @default(TR)  // Add language preference
   municipalityId String?
   municipality  Municipality?    @relation(fields: [municipalityId], references: [id])
   feedback      Feedback[]
@@ -175,4 +181,18 @@ model RefreshToken {
 
   @@index([userId])
   @@index([token])
+}
+
+model Translation {
+  id            String    @id @default(uuid())
+  key           String    // Translation key
+  tr            String    // Turkish text
+  en            String    // English text
+  category      String    // Category of translation (e.g., "feedback_status", "feedback_category")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([key, category])
+  @@index([key])
+  @@index([category])
 } 
