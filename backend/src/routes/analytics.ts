@@ -75,6 +75,24 @@ router.get('/municipalities/:id/statistics',
         where: whereClause
       });
 
+      // Get open issues (PENDING and IN_PROGRESS)
+      const openIssues = await prisma.feedback.count({
+        where: {
+          ...whereClause,
+          status: {
+            in: ['PENDING', 'IN_PROGRESS']
+          }
+        }
+      });
+
+      // Get resolved issues
+      const resolvedIssues = await prisma.feedback.count({
+        where: {
+          ...whereClause,
+          status: 'RESOLVED'
+        }
+      });
+
       // Get feedback by status
       const feedbackByStatus = await prisma.feedback.findMany({
         where: whereClause,
@@ -106,7 +124,7 @@ router.get('/municipalities/:id/statistics',
       const averageResolutionTime = resolvedFeedback.length === 0 ? 0 :
         resolvedFeedback.reduce((sum, f) => 
           sum + (f.updatedAt.getTime() - f.createdAt.getTime()), 0) / 
-        resolvedFeedback.length / (1000 * 60 * 60);
+        resolvedFeedback.length / (1000 * 60 * 60 * 24); // Convert to days
 
       // Count status occurrences
       const statusCounts = feedbackByStatus.reduce((acc: Record<string, number>, item) => {
@@ -122,6 +140,8 @@ router.get('/municipalities/:id/statistics',
 
       console.log('Statistics results:', {
         totalFeedback,
+        openIssues,
+        resolvedIssues,
         statusCounts,
         categoryCounts,
         averageResolutionTime
@@ -129,9 +149,11 @@ router.get('/municipalities/:id/statistics',
 
       res.json({
         totalFeedback,
-        feedbackByStatus: statusCounts,
+        openIssues,
+        resolvedIssues,
+        statusDistribution: statusCounts,
         feedbackByCategory: categoryCounts,
-        averageResolutionTime: Math.round(averageResolutionTime * 100) / 100
+        averageResolutionTime: Math.round(averageResolutionTime)
       });
     } catch (error) {
       console.error('Error fetching statistics:', error);
