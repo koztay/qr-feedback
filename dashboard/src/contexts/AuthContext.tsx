@@ -101,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push('/');
       } else if (user?.role === 'MUNICIPALITY_ADMIN') {
         // Restrict municipality admin access
-        const allowedPaths = ['/', '/users', `/users/${user.municipalityId}`];
+        const allowedPaths = ['/', '/feedback', '/users', `/users/${user.municipalityId}`];
         if (!allowedPaths.includes(pathname)) {
           router.push('/');
         }
