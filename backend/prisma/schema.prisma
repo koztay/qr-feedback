@@ -98,22 +98,21 @@ model Feedback {
   id            String           @id @default(uuid())
   description   String
   category      FeedbackCategory
+  status        FeedbackStatus   @default(PENDING)
   location      Json
   address       String
-  images        String[]
-  status        FeedbackStatus   @default(PENDING)
+  images        String[]         @default([])
   userId        String
-  user          User             @relation(fields: [userId], references: [id])
   municipalityId String
-  municipality  Municipality     @relation(fields: [municipalityId], references: [id])
-  comments      FeedbackComment[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
+  resolvedAt    DateTime?
+  user          User             @relation(fields: [userId], references: [id])
+  municipality  Municipality     @relation(fields: [municipalityId], references: [id])
+  comments      FeedbackComment[]
 
   @@index([userId])
   @@index([municipalityId])
-  @@index([status])
-  @@index([category])
 }
 
 model FeedbackComment {

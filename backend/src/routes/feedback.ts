@@ -278,9 +278,18 @@ router.patch('/:id/status', authenticateToken, requireRole(['ADMIN', 'MUNICIPALI
       }
     }
 
+    // If status is being set to RESOLVED, set resolvedAt timestamp
+    const updateData: any = { status };
+    if (status === 'RESOLVED') {
+      updateData.resolvedAt = new Date();
+    } else {
+      // If changing from RESOLVED to another status, clear resolvedAt
+      updateData.resolvedAt = null;
+    }
+
     const feedback = await prisma.feedback.update({
       where: { id },
-      data: { status },
+      data: updateData,
       include: {
         user: {
           select: {

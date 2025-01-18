@@ -113,28 +113,92 @@ router.get('/municipalities/:id/statistics',
       const resolvedFeedback = await prisma.feedback.findMany({
         where: {
           ...whereClause,
-          status: 'RESOLVED'
+          status: 'RESOLVED',
+          resolvedAt: { not: null }
         },
         select: {
+          id: true,
           createdAt: true,
-          updatedAt: true
+          resolvedAt: true
         }
       });
 
-      const averageResolutionTime = resolvedFeedback.length === 0 ? 0 :
-        resolvedFeedback.reduce((sum, f) => 
-          sum + (f.updatedAt.getTime() - f.createdAt.getTime()), 0) / 
-        resolvedFeedback.length / (1000 * 60 * 60 * 24); // Convert to days
+      console.log('Raw resolved feedback:', JSON.stringify(resolvedFeedback, null, 2));
+
+      let averageResolutionTime = 0;
+      try {
+        if (resolvedFeedback && resolvedFeedback.length > 0) {
+          let totalDays = 0;
+          let validFeedbackCount = 0;
+          
+          for (const feedback of resolvedFeedback) {
+            if (feedback.createdAt && feedback.resolvedAt) {
+              const now = new Date();
+              // Skip if dates are in the future
+              if (feedback.createdAt > now || feedback.resolvedAt > now) {
+                console.log('Skipping feedback with future dates:', feedback.id);
+                continue;
+              }
+              
+              const diffTime = feedback.resolvedAt.getTime() - feedback.createdAt.getTime();
+              // Skip negative durations
+              if (diffTime < 0) {
+                console.log('Skipping feedback with negative duration:', feedback.id);
+                continue;
+              }
+              
+              const diffDays = diffTime / (1000 * 60 * 60 * 24);
+              console.log('Valid resolution time:', {
+                id: feedback.id,
+                diffDays,
+                createdAt: feedback.createdAt.toISOString(),
+                resolvedAt: feedback.resolvedAt.toISOString()
+              });
+              
+              totalDays += diffDays;
+              validFeedbackCount++;
+            }
+          }
+          
+          if (validFeedbackCount > 0) {
+            averageResolutionTime = totalDays / validFeedbackCount;
+            console.log('Final resolution time calculation:', {
+              totalFeedback: resolvedFeedback.length,
+              validFeedbackCount,
+              totalDays,
+              averageResolutionTime
+            });
+          }
+        } else {
+          console.log('No resolved feedback found');
+        }
+      } catch (err) {
+        console.error('Error calculating resolution time:', err);
+      }
+
+      console.log('Resolution time details:', {
+        resolvedCount: resolvedFeedback.length,
+        resolutionTimes: resolvedFeedback.map(f => ({
+          created: f.createdAt,
+          resolved: f.resolvedAt,
+          days: (f.resolvedAt.getTime() - f.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+        })),
+        averageResolutionTime
+      });
 
       // Count status occurrences
       const statusCounts = feedbackByStatus.reduce((acc: Record<string, number>, item) => {
-        acc[item.status] = (acc[item.status] || 0) + 1;
+        if (item.status) {
+          acc[item.status] = (acc[item.status] || 0) + 1;
+        }
         return acc;
       }, {});
 
       // Count category occurrences
       const categoryCounts = feedbackByCategory.reduce((acc: Record<string, number>, item) => {
-        acc[item.category] = (acc[item.category] || 0) + 1;
+        if (item.category) {
+          acc[item.category] = (acc[item.category] || 0) + 1;
+        }
         return acc;
       }, {});
 
@@ -153,7 +217,7 @@ router.get('/municipalities/:id/statistics',
         resolvedIssues,
         statusDistribution: statusCounts,
         feedbackByCategory: categoryCounts,
-        averageResolutionTime: Math.round(averageResolutionTime)
+        averageResolutionTime: Number(averageResolutionTime.toFixed(1))
       });
     } catch (error) {
       console.error('Error fetching statistics:', error);

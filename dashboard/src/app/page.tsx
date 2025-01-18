@@ -92,27 +92,80 @@ export default function DashboardPage() {
 
       <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography variant="h6">Total Feedback</Typography>
-            <Typography variant="h4">{stats.totalFeedback || 0}</Typography>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: 140
+            }}
+          >
+            <Typography variant="h6" component="h2" gutterBottom>
+              Total Feedback
+            </Typography>
+            <Typography variant="h3">
+              {stats.totalFeedback || 0}
+            </Typography>
           </Paper>
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography variant="h6">Open Issues</Typography>
-            <Typography variant="h4">{stats.openIssues || 0}</Typography>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: 140
+            }}
+          >
+            <Typography variant="h6" component="h2" gutterBottom>
+              Open Issues
+            </Typography>
+            <Typography variant="h3">
+              {stats.openIssues || 0}
+            </Typography>
           </Paper>
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography variant="h6">Resolved Issues</Typography>
-            <Typography variant="h4">{stats.resolvedIssues || 0}</Typography>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: 140
+            }}
+          >
+            <Typography variant="h6" component="h2" gutterBottom>
+              Resolved Issues
+            </Typography>
+            <Typography variant="h3">
+              {stats.resolvedIssues || 0}
+            </Typography>
           </Paper>
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography variant="h6">Avg. Resolution Time</Typography>
-            <Typography variant="h4">{Math.round(stats.averageResolutionTime || 0)} days</Typography>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: 140
+            }}
+          >
+            <Typography variant="h6" component="h2" gutterBottom>
+              Avg. Resolution Time
+            </Typography>
+            <Typography variant="h3">
+              {stats.averageResolutionTime > 0 
+                ? `${stats.averageResolutionTime.toFixed(1)} days` 
+                : 'N/A'}
+            </Typography>
           </Paper>
         </Grid>
 
