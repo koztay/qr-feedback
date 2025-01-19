@@ -8,7 +8,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // Get all feedback
-router.get('/', authenticateToken, async (req: Request & { user: { id: string } }, res: Response) => {
+router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
     const feedback = await prisma.feedback.findMany({
       include: {
@@ -51,7 +51,7 @@ router.get('/', authenticateToken, async (req: Request & { user: { id: string } 
 });
 
 // Get feedback by ID
-router.get('/:id', authenticateToken, async (req: Request & { user: { id: string } }, res: Response) => {
+router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const feedback = await prisma.feedback.findUnique({
@@ -97,7 +97,7 @@ router.get('/:id', authenticateToken, async (req: Request & { user: { id: string
 });
 
 // Create feedback
-router.post('/', authenticateToken, async (req: Request & { user: { id: string } }, res: Response) => {
+router.post('/', authenticateToken, async (req: Request, res: Response) => {
   try {
     const feedback = await prisma.feedback.create({
       data: {
@@ -130,7 +130,7 @@ router.post('/', authenticateToken, async (req: Request & { user: { id: string }
 });
 
 // Update feedback
-router.put('/:id', authenticateToken, async (req: Request & { user: { id: string } }, res: Response) => {
+router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { status, ...otherData } = req.body;
@@ -172,7 +172,7 @@ router.put('/:id', authenticateToken, async (req: Request & { user: { id: string
 });
 
 // Delete feedback
-router.delete('/:id', authenticateToken, async (req: Request & { user: { id: string } }, res: Response) => {
+router.delete('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.feedback.delete({
@@ -187,7 +187,7 @@ router.delete('/:id', authenticateToken, async (req: Request & { user: { id: str
 });
 
 // Add comment to feedback
-router.post('/:id/comments', authenticateToken, async (req: Request & { user: { id: string } }, res: Response) => {
+router.post('/:id/comments', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { comment } = req.body;
