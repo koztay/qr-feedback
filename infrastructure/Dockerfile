@@ -22,6 +22,10 @@ COPY backend/ ./backend/
 # Set working directory to backend
 WORKDIR /app/backend
 
+# Create volume directories
+RUN mkdir -p /app/backend/node_modules /app/backend/dist
+VOLUME ["/app/backend/node_modules", "/app/backend/dist"]
+
 # Generate Prisma client and types
 RUN yarn prisma generate
 
