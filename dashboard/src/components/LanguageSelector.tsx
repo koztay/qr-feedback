@@ -32,10 +32,10 @@ export default function LanguageSelector() {
       <IconButton
         color="inherit"
         onClick={handleLanguageClick}
-        sx={{ color: 'text.primary' }}
+        sx={{ ml: 2 }}
       >
         <LanguageIcon />
-        <Typography variant="button" sx={{ ml: 1 }}>
+        <Typography variant="button" sx={{ ml: 1, color: 'inherit' }}>
           {language}
         </Typography>
       </IconButton>
@@ -43,6 +43,14 @@ export default function LanguageSelector() {
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleLanguageClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
       >
         {supportedLanguages.map((lang) => (
           <MenuItem

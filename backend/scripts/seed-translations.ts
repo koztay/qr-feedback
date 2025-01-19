@@ -125,7 +125,7 @@ const defaultTranslations = [
     key: 'dashboard',
     category: 'navigation',
     translations: {
-      TR: 'Panel',
+      TR: 'PANEL',
       EN: 'Dashboard'
     }
   },
@@ -133,7 +133,7 @@ const defaultTranslations = [
     key: 'feedback',
     category: 'navigation',
     translations: {
-      TR: 'Geri Bildirimler',
+      TR: 'GERİ BİLDİRİMLER',
       EN: 'Feedback'
     }
   },
@@ -141,7 +141,7 @@ const defaultTranslations = [
     key: 'municipalities',
     category: 'navigation',
     translations: {
-      TR: 'Belediyeler',
+      TR: 'BELEDİYELER',
       EN: 'Municipalities'
     }
   },
@@ -149,7 +149,7 @@ const defaultTranslations = [
     key: 'users',
     category: 'navigation',
     translations: {
-      TR: 'Kullanıcılar',
+      TR: 'KULLANICILAR',
       EN: 'Users'
     }
   },
@@ -157,8 +157,33 @@ const defaultTranslations = [
     key: 'translations',
     category: 'navigation',
     translations: {
-      TR: 'Çeviriler',
+      TR: 'ÇEVİRİLER',
       EN: 'Translations'
+    }
+  },
+  // Common Actions
+  {
+    key: 'logout',
+    category: 'common',
+    translations: {
+      TR: 'ÇIKIŞ',
+      EN: 'Logout'
+    }
+  },
+  {
+    key: 'app_name',
+    category: 'common',
+    translations: {
+      TR: 'QR Geri Bildirim',
+      EN: 'QR Feedback'
+    }
+  },
+  {
+    key: 'actions',
+    category: 'common',
+    translations: {
+      TR: 'İşlemler',
+      EN: 'Actions'
     }
   },
   // Feedback Table Headers and Columns
@@ -219,14 +244,6 @@ const defaultTranslations = [
     }
   },
   {
-    key: 'actions',
-    category: 'feedback',
-    translations: {
-      TR: 'İşlemler',
-      EN: 'Actions'
-    }
-  },
-  {
     key: 'view_details',
     category: 'feedback',
     translations: {
@@ -240,6 +257,142 @@ const defaultTranslations = [
     translations: {
       TR: 'Geri Bildirim Yönetimi',
       EN: 'Feedback Management'
+    }
+  },
+  {
+    key: 'view_dashboard',
+    category: 'common',
+    translations: {
+      TR: 'PANELE GİT',
+      EN: 'VIEW DASHBOARD'
+    }
+  },
+  {
+    key: 'error_loading_stats',
+    category: 'dashboard',
+    translations: {
+      TR: 'İstatistikler yüklenirken hata oluştu',
+      EN: 'Error loading statistics'
+    }
+  },
+  {
+    key: 'resolved_issues',
+    category: 'dashboard',
+    translations: {
+      TR: 'Çözülen Konular',
+      EN: 'Resolved Issues'
+    }
+  },
+  {
+    key: 'avg_resolution_time',
+    category: 'dashboard',
+    translations: {
+      TR: 'Ortalama Çözüm Süresi',
+      EN: 'Average Resolution Time'
+    }
+  },
+  {
+    key: 'status_distribution',
+    category: 'dashboard',
+    translations: {
+      TR: 'Durum Dağılımı',
+      EN: 'Status Distribution'
+    }
+  },
+  {
+    key: 'feedback_by_category',
+    category: 'dashboard',
+    translations: {
+      TR: 'Kategoriye Göre Geri Bildirimler',
+      EN: 'Feedback by Category'
+    }
+  },
+  {
+    key: 'feedback_count',
+    category: 'dashboard',
+    translations: {
+      TR: 'Geri Bildirim Sayısı',
+      EN: 'Feedback Count'
+    }
+  },
+  {
+    key: 'days',
+    category: 'common',
+    translations: {
+      TR: 'gün',
+      EN: 'days'
+    }
+  },
+  {
+    key: 'welcome',
+    category: 'common',
+    translations: {
+      TR: 'Hoş Geldiniz',
+      EN: 'Welcome'
+    }
+  },
+  {
+    key: 'welcome_message',
+    category: 'common',
+    translations: {
+      TR: 'QR Geri Bildirim sistemine hoş geldiniz. Sol menüden istediğiniz bölüme gidebilirsiniz.',
+      EN: 'Welcome to QR Feedback system. You can navigate to any section using the left menu.'
+    }
+  },
+  {
+    key: 'no_data',
+    category: 'common',
+    translations: {
+      TR: 'Veri bulunamadı',
+      EN: 'No data available'
+    }
+  },
+  {
+    key: 'municipality_name',
+    category: 'municipalities',
+    translations: {
+      TR: 'Belediye Adı',
+      EN: 'Municipality Name'
+    }
+  },
+  {
+    key: 'city',
+    category: 'municipalities',
+    translations: {
+      TR: 'Şehir',
+      EN: 'City'
+    }
+  },
+  {
+    key: 'feedback_count',
+    category: 'municipalities',
+    translations: {
+      TR: 'Geri Bildirim Sayısı',
+      EN: 'Feedback Count'
+    }
+  },
+  {
+    key: 'edit',
+    category: 'common',
+    translations: {
+      TR: 'DÜZENLE',
+      EN: 'EDIT'
+    }
+  },
+  {
+    key: 'add_municipality',
+    category: 'municipalities',
+    translations: {
+      TR: 'BELEDİYE EKLE',
+      EN: 'ADD MUNICIPALITY'
+    }
+  },
+  {
+    key: 'municipality_management',
+    category: 'municipalities',
+    translations: {
+      TR: 'Belediye Yönetimi',
+      EN: 'Municipality Management'
     }
   }
 ];

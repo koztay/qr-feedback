@@ -135,4 +135,49 @@ router.patch('/:id', authenticateToken, requireRole(['ADMIN']), async (req, res)
   }
 });
 
+// Get municipality statistics
+router.get('/:id/statistics', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const municipality = await prisma.municipality.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        city: true,
+        feedback: {
+          select: {
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!municipality) {
+      return res.status(404).json({ error: 'Municipality not found' });
+    }
+
+    const totalFeedback = municipality.feedback.length;
+    const openIssues = municipality.feedback.filter(f => 
+      f.status === 'PENDING' || f.status === 'IN_PROGRESS'
+    ).length;
+    const resolvedIssues = municipality.feedback.filter(f => 
+      f.status === 'RESOLVED'
+    ).length;
+
+    res.json({
+      totalFeedback,
+      openIssues,
+      resolvedIssues,
+      municipality: {
+        name: municipality.name,
+        city: municipality.city
+      }
+    });
+  } catch (error) {
+    console.error('Get municipality statistics error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router; 

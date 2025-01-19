@@ -155,7 +155,7 @@ export default function MunicipalitiesPage() {
                 <TableRow>
                   <TableCell>{t('municipality_name', 'municipalities')}</TableCell>
                   <TableCell>{t('city', 'municipalities')}</TableCell>
-                  <TableCell>{t('qr_code_count', 'municipalities')}</TableCell>
+                  <TableCell>{t('feedback_count', 'municipalities')}</TableCell>
                   <TableCell>{t('actions', 'common')}</TableCell>
                 </TableRow>
               </TableHead>
@@ -164,18 +164,29 @@ export default function MunicipalitiesPage() {
                   <TableRow key={municipality.id}>
                     <TableCell>{municipality.name}</TableCell>
                     <TableCell>{municipality.city}</TableCell>
-                    <TableCell>{municipality.qrCodeCount || 0}</TableCell>
+                    <TableCell>{municipality._count?.feedback || 0}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => {
-                          setSelectedMunicipality(municipality);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        {t('edit', 'common')}
-                      </Button>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => {
+                            setSelectedMunicipality(municipality);
+                            setDialogOpen(true);
+                          }}
+                        >
+                          {t('edit', 'common')}
+                        </Button>
+                        {user?.role === 'ADMIN' && (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => router.push(`/dashboard/${municipality.id}`)}
+                          >
+                            {t('view_dashboard', 'common')}
+                          </Button>
+                        )}
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}

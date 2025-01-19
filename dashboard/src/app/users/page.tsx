@@ -54,12 +54,12 @@ interface UserFormData {
 
 const fetchUsers = async () => {
   const response = await api.get('/users');
-  return response.data;
+  return Array.isArray(response.data) ? response.data : response.data.data;
 };
 
 const fetchMunicipalities = async () => {
   const response = await api.get('/municipalities');
-  return response.data;
+  return Array.isArray(response.data) ? response.data : response.data.data;
 };
 
 export default function UsersPage() {
