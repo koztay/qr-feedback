@@ -23,46 +23,31 @@ COPY backend/ ./backend/
 # Set working directory to backend
 WORKDIR /app/backend
 
-# Generate Prisma client and types
-RUN yarn prisma generate
+# Generate Prisma client and build
+RUN yarn prisma generate && yarn build
 
-# Check TypeScript types with verbose output
-RUN yarn tsc --noEmit --pretty
-
-# Build TypeScript
-RUN yarn build
-
-# Start a new stage for a smaller production image
+# Start a new stage for production
 FROM node:18-alpine
 
-WORKDIR /app
+WORKDIR /app/backend
 
 # Install production dependencies
 RUN apk add --no-cache openssl
 
-# Copy package files
-COPY package.json yarn.lock ./
-COPY backend/package.json ./backend/
+# Copy package files and install dependencies
+COPY --from=builder /app/package.json /app/yarn.lock /app/
+COPY --from=builder /app/backend/package.json ./
+RUN yarn install --production --frozen-lockfile
 
-# Install production dependencies and Prisma
-RUN yarn workspace backend install --production --frozen-lockfile && \
-    yarn workspace backend add @prisma/client@5.22.0 && \
-    yarn workspace backend add prisma@5.22.0 --dev
+# Copy built files and prisma schema
+COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/prisma ./prisma
 
-# Copy built files from builder stage
-COPY --from=builder /app/backend/dist ./backend/dist
-COPY --from=builder /app/backend/prisma ./backend/prisma
+# Generate Prisma client
+RUN yarn add @prisma/client@5.22.0 && \
+    yarn add prisma@5.22.0 --dev && \
+    yarn prisma generate
 
-# Generate Prisma client in production
-WORKDIR /app/backend
-RUN yarn prisma generate
-
-# Create and declare volumes
-RUN mkdir -p /app/backend/node_modules /app/backend/dist
-VOLUME ["/app/backend/node_modules", "/app/backend/dist"]
-
-# Expose the port
 EXPOSE 3000
 
-# Start the application
 CMD ["yarn", "start"] 
