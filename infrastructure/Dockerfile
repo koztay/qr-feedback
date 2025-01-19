@@ -19,7 +19,9 @@ RUN yarn install --frozen-lockfile
 
 # Copy backend files
 COPY backend/ ./backend/
-COPY backend/scripts ./backend/scripts
+
+# Verify scripts directory exists
+RUN ls -la ./backend/scripts || exit 1
 
 # Set working directory to backend
 WORKDIR /app/backend
