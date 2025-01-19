@@ -33,7 +33,9 @@ RUN echo "Verifying scripts directory:" && \
 WORKDIR /app/backend
 
 # Generate Prisma client and build
-RUN yarn prisma generate && yarn build
+RUN yarn prisma generate && \
+    yarn tsc --project tsconfig.json && \
+    yarn tsc scripts/seed-translations.ts --outDir dist/scripts
 
 # Start a new stage for production
 FROM node:18-alpine
@@ -46,10 +48,9 @@ RUN apk add --no-cache openssl
 # Copy package files and install dependencies
 COPY --from=builder /app/package.json /app/yarn.lock /app/
 COPY --from=builder /app/backend/package.json ./
-RUN yarn install --production --frozen-lockfile && \
-    yarn add ts-node@10.9.2 typescript@5.3.3 @types/node@20.11.19 --dev
+RUN yarn install --production --frozen-lockfile
 
-# Copy built files, prisma schema, and scripts
+# Copy built files, prisma schema, and compiled scripts
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/prisma ./prisma
 COPY --from=builder /app/backend/scripts/ ./scripts/

@@ -155,5 +155,5 @@ jobs:
             ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
             export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
             echo "Running seed translations..."
-            cd /app/backend && /app/node_modules/.bin/ts-node --project /app/backend/tsconfig.json --cwd /app/backend scripts/seed-translations.ts
+            cd /app/backend && node dist/scripts/seed-translations.js
             ' 
