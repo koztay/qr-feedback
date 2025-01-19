@@ -1,4 +1,5 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
+import type { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, requireRole } from '../middleware/auth';
 
@@ -6,7 +7,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // Get all municipalities
-router.get('/', authenticateToken, async (req: Request, res: Response) => {
+router.get('/', authenticateToken, async (req: Request & { user: { id: string } }, res: Response) => {
   try {
     const municipalities = await prisma.municipality.findMany({
       include: {
@@ -27,7 +28,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // Get municipality by ID
-router.get('/:id', authenticateToken, async (req: express.Request, res: express.Response) => {
+router.get('/:id', authenticateToken, async (req: Request & { user: { id: string } }, res: Response) => {
   try {
     const { id } = req.params;
     const municipality = await prisma.municipality.findUnique({
@@ -54,7 +55,7 @@ router.get('/:id', authenticateToken, async (req: express.Request, res: express.
 });
 
 // Create municipality
-router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: express.Request, res: express.Response) => {
+router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: Request & { user: { id: string } }, res: Response) => {
   try {
     const municipality = await prisma.municipality.create({
       data: req.body,
@@ -68,7 +69,7 @@ router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: express.
 });
 
 // Update municipality
-router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: express.Request, res: express.Response) => {
+router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Request & { user: { id: string } }, res: Response) => {
   try {
     const { id } = req.params;
     const municipality = await prisma.municipality.update({
@@ -84,7 +85,7 @@ router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: expres
 });
 
 // Delete municipality
-router.delete('/:id', authenticateToken, requireRole(['ADMIN']), async (req: express.Request, res: express.Response) => {
+router.delete('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Request & { user: { id: string } }, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.municipality.delete({
@@ -99,7 +100,7 @@ router.delete('/:id', authenticateToken, requireRole(['ADMIN']), async (req: exp
 });
 
 // Get municipality statistics
-router.get('/:id/statistics', authenticateToken, async (req: Request, res: Response) => {
+router.get('/:id/statistics', authenticateToken, async (req: Request & { user: { id: string } }, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -166,11 +167,13 @@ router.get('/:id/statistics', authenticateToken, async (req: Request, res: Respo
 
     let averageResolutionTime = 0;
     if (resolvedFeedback.length > 0) {
-      const totalResolutionTime = resolvedFeedback.reduce((acc, feedback) => {
+      const resolutionTimes = resolvedFeedback.map(feedback => {
         const resolutionTime = feedback.resolvedAt!.getTime() - feedback.createdAt.getTime();
-        return acc + resolutionTime;
-      }, 0);
-      averageResolutionTime = Math.round(totalResolutionTime / resolvedFeedback.length / (1000 * 60 * 60 * 24)); // Convert to days
+        return resolutionTime;
+      });
+
+      const totalResolutionTime = resolutionTimes.reduce((acc, time) => acc + time, 0);
+      averageResolutionTime = totalResolutionTime / (resolvedFeedback.length * 1000 * 60 * 60 * 24);
     }
 
     // Format the response
