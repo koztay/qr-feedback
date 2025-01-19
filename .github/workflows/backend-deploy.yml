@@ -134,16 +134,13 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /app
-            echo "Debug: Checking environment variables in backend container..."
-            docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'echo "POSTGRES_PASSWORD: $POSTGRES_PASSWORD"'
-            docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'echo "DATABASE_URL before: $DATABASE_URL"'
-            
-            # Construct and print the database URL
-            DB_URL="postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/municipal_feedback"
-            echo "Debug: Constructed DB_URL: $DB_URL"
-            
-            # Run migrations with debug output
-            docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'export DATABASE_URL="postgresql://postgres:$POSTGRES_PASSWORD@postgres:5432/municipal_feedback" && echo "DATABASE_URL after: $DATABASE_URL" && yarn prisma migrate deploy'
+            # URL encode the password and construct the database URL
+            docker-compose -f docker-compose.prod.yml exec -T backend sh -c '
+              ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
+              export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
+              echo "Using database URL: $DATABASE_URL"
+              yarn prisma migrate deploy
+            '
 
       - name: Seed translations
         uses: appleboy/ssh-action@master
