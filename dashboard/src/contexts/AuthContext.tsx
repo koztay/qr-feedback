@@ -100,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!loading) {
       const isLoginPage = pathname === '/login';
+      const isDashboardPage = pathname.startsWith('/dashboard/');
       
       if (!user && !isLoginPage) {
         router.push('/login');
@@ -107,9 +108,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push('/');
       } else if (user?.role === 'MUNICIPALITY_ADMIN') {
         // Restrict municipality admin access
-        const allowedPaths = ['/', '/feedback', '/users', `/users/${user.municipalityId}`];
-        if (!allowedPaths.includes(pathname)) {
-          router.push('/');
+        const allowedPaths = ['/', '/feedback', '/users', `/users/${user.municipalityId}`, `/dashboard/${user.municipalityId}`];
+        if (!allowedPaths.includes(pathname) && !isDashboardPage) {
+          router.push(`/dashboard/${user.municipalityId}`);
         }
       }
     }

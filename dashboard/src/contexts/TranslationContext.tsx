@@ -47,25 +47,18 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     const initializeLanguage = async () => {
       if (isInitialized) return;
       
-      try {
-        if (user?.id) {
-          const response = await api.get(`/users/${user.id}`);
-          const userLanguage = response.data.language || 'TR';
-          setLanguage(userLanguage);
-        } else {
-          // Use localStorage for non-authenticated users
-          const savedLanguage = localStorage.getItem('preferredLanguage') || 'TR';
-          setLanguage(savedLanguage);
-        }
-      } catch (error) {
-        console.error('Error fetching user language:', error);
-      } finally {
-        setIsInitialized(true);
+      if (user?.language) {
+        setLanguage(user.language);
+      } else {
+        // Use localStorage for non-authenticated users
+        const savedLanguage = localStorage.getItem('preferredLanguage') || 'TR';
+        setLanguage(savedLanguage);
       }
+      setIsInitialized(true);
     };
 
     initializeLanguage();
-  }, [user?.id]);
+  }, [user?.language, isInitialized]);
 
   // Fetch translations
   useEffect(() => {
