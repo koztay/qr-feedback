@@ -11,8 +11,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - backend_node_modules:/app/backend/node_modules
-      - backend_dist:/app/backend/dist
+      - /app/backend/node_modules
+      - /app/backend/dist
 
   postgres:
     image: postgres:15-alpine
@@ -25,6 +25,4 @@ services:
       - "5432:5432"
 
 volumes:
-  postgres_data:
-  backend_node_modules:
-  backend_dist: 
+  postgres_data: 
