@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, RequestHandler } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -12,7 +12,7 @@ const loginSchema = z.object({
   password: z.string().min(8),
 });
 
-router.post('/login', async (req: express.Request, res: express.Response) => {
+router.post('/login', (async (req: Request, res: Response) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
 
@@ -63,9 +63,9 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
     }
     res.status(500).json({ error: 'Internal server error' });
   }
-});
+}) as RequestHandler);
 
-router.get('/me', async (req: express.Request, res: express.Response) => {
+router.get('/me', (async (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
@@ -106,6 +106,6 @@ router.get('/me', async (req: express.Request, res: express.Response) => {
     }
     res.status(500).json({ error: 'Internal server error' });
   }
-});
+}) as RequestHandler);
 
 export default router; 
