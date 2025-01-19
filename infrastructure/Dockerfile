@@ -19,6 +19,7 @@ RUN yarn install --frozen-lockfile
 
 # Copy backend files
 COPY backend/ ./backend/
+COPY backend/scripts ./backend/scripts
 
 # Set working directory to backend
 WORKDIR /app/backend
@@ -43,7 +44,7 @@ RUN yarn install --production --frozen-lockfile && \
 # Copy built files, prisma schema, and scripts
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/prisma ./prisma
-COPY --from=builder /app/backend/scripts ./scripts
+COPY --from=builder /app/backend/scripts/ ./scripts/
 
 # Generate Prisma client
 RUN yarn add @prisma/client@5.22.0 && \
