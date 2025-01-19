@@ -26,7 +26,7 @@ WORKDIR /app/backend
 RUN yarn prisma generate
 
 # Build TypeScript with types
-RUN yarn tsc --project tsconfig.json --skipLibCheck
+RUN yarn build
 
 # Expose the port
 EXPOSE 3000
