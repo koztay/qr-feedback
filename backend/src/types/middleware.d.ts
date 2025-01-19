@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request } from 'express';
 import { UserRole } from '@prisma/client';
-import { AsyncRequestHandler } from './express';
+import { TypedRequestHandler, UnauthenticatedRequestHandler } from './express';
 
 export interface AuthenticatedRequest extends Request {
   user: {
@@ -10,16 +10,8 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-export type AuthenticatedHandler<
-  P = any,
-  ResBody = any,
-  ReqBody = any,
-  ReqQuery = any
-> = AsyncRequestHandler<P, ResBody, ReqBody, ReqQuery>;
-
-export interface UnauthenticatedRequest extends Request {
-  user?: never;
-}
+export type AuthMiddleware = UnauthenticatedRequestHandler;
+export type RoleMiddleware = TypedRequestHandler;
 
 // Type guard to check if a request is authenticated
 export function isAuthenticatedRequest(req: Request): req is AuthenticatedRequest {
