@@ -8,8 +8,23 @@ nodeVersion: ">=18.0.0"
 useWorkspaces: true
 npmClient: yarn
 
+# Important Commands
+
+## Development
+- Start all services: `yarn dev`
+- Start backend only: `yarn backend`
+- Start dashboard only: `yarn dashboard`
+- Start mobile app: `yarn mobile`
+
+## Database
+- Run migrations: `yarn workspace backend prisma migrate deploy`
+- Seed database: `yarn workspace backend prisma db seed`
+- Seed translations: `cd backend && DATABASE_URL="postgresql://postgres:postgres@localhost:5432/municipal_feedback?schema=public" yarn seed:translations`
+
 # Project Structure
 workspaces:
   - "mobile-app"
   - "backend"
-  - "dashboard" 
+  - "dashboard"
+  - "docs"
+  - "infrastructure" 

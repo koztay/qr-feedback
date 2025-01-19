@@ -68,33 +68,30 @@ yarn mobile     # Start mobile app
 
 ## Development
 
+### Setup
+1. Install dependencies: `yarn install`
+2. Start development servers: `yarn dev`
+
 ### Database
-The development environment uses Docker Compose to run PostgreSQL with PostGIS extension and Redis:
-
+1. Run migrations: `yarn workspace backend prisma migrate deploy`
+2. Seed initial data: `yarn workspace backend prisma db seed`
+3. Seed translations: 
 ```bash
-# Start the services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop the services
-docker-compose down
-
-# Stop and remove volumes (will delete all data)
-docker-compose down -v
+cd backend && DATABASE_URL="postgresql://postgres:postgres@localhost:5432/municipal_feedback?schema=public" yarn seed:translations
 ```
 
-Default database credentials:
-- Host: localhost
-- Port: 5432
-- Database: municipal_feedback
-- Username: postgres
-- Password: postgres
+### Project Structure
+- `backend/`: Node.js + Express backend
+- `dashboard/`: Next.js dashboard
+- `mobile-app/`: React Native + Expo app
+- `docs/`: Documentation
+- `infrastructure/`: DevOps & Infrastructure
 
-Redis connection:
-- Host: localhost
-- Port: 6379
+### Important Commands
+- `yarn dev`: Start both backend and dashboard
+- `yarn backend`: Start only backend
+- `yarn dashboard`: Start only dashboard
+- `yarn mobile`: Start only mobile app
 
 ### Mobile App
 - Uses Expo for cross-platform development

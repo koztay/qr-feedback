@@ -40,6 +40,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   const [translations, setTranslations] = useState<Translations>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const missingTranslationsRef = React.useRef<Set<string>>(new Set());
 
   // Initialize language from user preferences
   useEffect(() => {
@@ -69,13 +70,17 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
         
         const organized: Translations = {};
         translationData.forEach((item: any) => {
-          if (!organized[item.category]) {
-            organized[item.category] = {};
+          const category = item.category;
+          
+          if (!organized[category]) {
+            organized[category] = {};
           }
-          organized[item.category][item.key] = item.translations;
+          organized[category][item.key] = item.translations;
         });
         
         setTranslations(organized);
+        // Clear missing translations cache when we get new translations
+        missingTranslationsRef.current.clear();
       } catch (error) {
         console.error('Error fetching translations:', error);
       } finally {
@@ -86,13 +91,15 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     if (isInitialized) {
       fetchTranslations();
     }
-  }, [language, isInitialized]);
+  }, [isInitialized]); // Only fetch when initialized, not on language change
 
   // Update user's language preference
   const handleLanguageChange = async (newLanguage: string) => {
     if (!user?.id || !isInitialized) return;
     
     setLanguage(newLanguage);
+    // Clear missing translations cache when language changes
+    missingTranslationsRef.current.clear();
     try {
       await api.patch(`/users/${user.id}`, { language: newLanguage });
     } catch (error) {
@@ -102,12 +109,27 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 
   const t = (key: string, category: string = 'common') => {
     try {
-      const translation = translations[category]?.[key]?.[language];
-      if (!translation) {
-        console.warn(`Missing translation: ${category}.${key} for language ${language}`);
-        return key;
+      // Create a unique key for caching missing translations
+      const cacheKey = `${category}:${key}:${language}`;
+
+      // Handle nested keys (e.g., 'common.view_details')
+      if (key.includes('.')) {
+        const [nestedCategory, nestedKey] = key.split('.');
+        const translation = translations[nestedCategory]?.[nestedKey]?.[language];
+        if (!translation && !missingTranslationsRef.current.has(cacheKey) && translations[nestedCategory]) {
+          missingTranslationsRef.current.add(cacheKey);
+          console.warn(`Missing translation: ${key} for language ${language}`);
+        }
+        return translation || nestedKey;
       }
-      return translation;
+
+      // Handle regular keys
+      const translation = translations[category]?.[key]?.[language];
+      if (!translation && !missingTranslationsRef.current.has(cacheKey) && translations[category]) {
+        missingTranslationsRef.current.add(cacheKey);
+        console.warn(`Missing translation: ${key} in category ${category} for language ${language}`);
+      }
+      return translation || key;
     } catch (error) {
       console.error(`Translation error for key: ${key}`, error);
       return key;

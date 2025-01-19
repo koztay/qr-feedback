@@ -125,40 +125,40 @@ const defaultTranslations = [
     key: 'dashboard',
     category: 'navigation',
     translations: {
-      TR: 'Panel',
-      EN: 'Dashboard'
+      TR: 'PANEL',
+      EN: 'DASHBOARD'
     }
   },
   {
     key: 'feedback',
     category: 'navigation',
     translations: {
-      TR: 'Geri Bildirimler',
-      EN: 'Feedback'
+      TR: 'GERİ BİLDİRİMLER',
+      EN: 'FEEDBACK'
     }
   },
   {
     key: 'municipalities',
     category: 'navigation',
     translations: {
-      TR: 'Belediyeler',
-      EN: 'Municipalities'
+      TR: 'BELEDİYELER',
+      EN: 'MUNICIPALITIES'
     }
   },
   {
     key: 'users',
     category: 'navigation',
     translations: {
-      TR: 'Kullanıcılar',
-      EN: 'Users'
+      TR: 'KULLANICILAR',
+      EN: 'USERS'
     }
   },
   {
     key: 'translations',
     category: 'navigation',
     translations: {
-      TR: 'Çeviriler',
-      EN: 'Translations'
+      TR: 'ÇEVİRİLER',
+      EN: 'TRANSLATIONS'
     }
   },
   // Common Actions
@@ -166,8 +166,8 @@ const defaultTranslations = [
     key: 'logout',
     category: 'common',
     translations: {
-      TR: 'Çıkış Yap',
-      EN: 'Logout'
+      TR: 'ÇIKIŞ YAP',
+      EN: 'LOGOUT'
     }
   },
   {
@@ -176,6 +176,14 @@ const defaultTranslations = [
     translations: {
       TR: 'QR Geri Bildirim',
       EN: 'QR Feedback'
+    }
+  },
+  {
+    key: 'view_details',
+    category: 'common',
+    translations: {
+      TR: 'DETAYLARI GÖR',
+      EN: 'VIEW DETAILS'
     }
   },
   {
@@ -188,11 +196,11 @@ const defaultTranslations = [
   },
   // Feedback Table Headers and Columns
   {
-    key: 'category',
+    key: 'submitted_by',
     category: 'feedback',
     translations: {
-      TR: 'Kategori',
-      EN: 'Category'
+      TR: 'Gönderen',
+      EN: 'Submitted By'
     }
   },
   {
@@ -201,6 +209,14 @@ const defaultTranslations = [
     translations: {
       TR: 'Belediye',
       EN: 'Municipality'
+    }
+  },
+  {
+    key: 'category',
+    category: 'feedback',
+    translations: {
+      TR: 'Kategori',
+      EN: 'Category'
     }
   },
   {
@@ -228,27 +244,11 @@ const defaultTranslations = [
     }
   },
   {
-    key: 'submitter',
-    category: 'feedback',
-    translations: {
-      TR: 'Gönderen',
-      EN: 'Submitter'
-    }
-  },
-  {
     key: 'date',
     category: 'feedback',
     translations: {
       TR: 'Tarih',
       EN: 'Date'
-    }
-  },
-  {
-    key: 'view_details',
-    category: 'feedback',
-    translations: {
-      TR: 'DETAYLARI GÖR',
-      EN: 'VIEW DETAILS'
     }
   },
   {
@@ -393,6 +393,63 @@ const defaultTranslations = [
     translations: {
       TR: 'Belediye Yönetimi',
       EN: 'Municipality Management'
+    }
+  },
+  {
+    key: 'status_update_success',
+    category: 'feedback',
+    translations: {
+      TR: 'Durum başarıyla güncellendi',
+      EN: 'Status updated successfully'
+    }
+  },
+  {
+    key: 'category_update_success',
+    category: 'feedback',
+    translations: {
+      TR: 'Kategori başarıyla güncellendi',
+      EN: 'Category updated successfully'
+    }
+  },
+  {
+    key: 'category_updated',
+    category: 'feedback',
+    translations: {
+      TR: 'Kategori güncellendi',
+      EN: 'Category updated'
+    }
+  },
+  {
+    key: 'category_to',
+    category: 'feedback',
+    translations: {
+      TR: 'yeni kategori:',
+      EN: 'to:'
+    }
+  },
+  {
+    key: 'error_updating_category',
+    category: 'feedback',
+    translations: {
+      TR: 'Kategori güncellenirken hata oluştu',
+      EN: 'Error updating category'
+    }
+  },
+  {
+    key: 'admin_dashboard',
+    category: 'dashboard',
+    translations: {
+      TR: 'Yönetici Paneli',
+      EN: 'Admin Dashboard'
+    }
+  },
+  // User Management
+  {
+    key: 'municipality',
+    category: 'users',
+    translations: {
+      TR: 'Belediye',
+      EN: 'Municipality'
     }
   }
 ];

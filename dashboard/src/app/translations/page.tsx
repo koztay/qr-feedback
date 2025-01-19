@@ -52,7 +52,9 @@ export default function TranslationsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const categories = translations ? [...new Set(translations.map(t => t.category))].sort() : [];
+  const categories = translations && Array.isArray(translations) 
+    ? [...new Set(translations.map(t => t.category))].sort() 
+    : [];
 
   const handleEdit = (translation: Translation) => {
     setEditingId(translation.id);
@@ -61,7 +63,9 @@ export default function TranslationsPage() {
 
   const handleSave = async (translation: Translation) => {
     try {
-      await api.patch(`/translations/${translation.id}`, {
+      await api.post('/translations', {
+        key: translation.key,
+        category: translation.category,
         translations: editedTranslations
       });
       setEditingId(null);

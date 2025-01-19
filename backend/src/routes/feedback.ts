@@ -175,4 +175,44 @@ router.delete('/:id', authenticateToken, async (req: express.Request, res: expre
   }
 });
 
+// Add comment to feedback
+router.post('/:id/comments', authenticateToken, async (req: express.Request, res: express.Response) => {
+  try {
+    const { id } = req.params;
+    const { comment } = req.body;
+
+    const feedback = await prisma.feedback.findUnique({
+      where: { id },
+      include: { municipality: true }
+    });
+
+    if (!feedback) {
+      return res.status(404).json({ error: 'Feedback not found' });
+    }
+
+    // Create the comment
+    const newComment = await prisma.feedbackComment.create({
+      data: {
+        comment,
+        feedbackId: id,
+        userId: req.user.id
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            role: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json(newComment);
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router; 

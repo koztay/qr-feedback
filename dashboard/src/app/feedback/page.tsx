@@ -118,14 +118,30 @@ export default function FeedbackPage() {
     }
 
     try {
-      await api.patch(`/feedback/${selectedFeedback.id}/status`, { status: newStatus });
-      await api.post(`/feedback/${selectedFeedback.id}/comments`, { 
+      // Update status
+      await api.put(`/feedback/${selectedFeedback.id}`, { status: newStatus });
+      
+      // Add status update comment
+      const commentResponse = await api.post(`/feedback/${selectedFeedback.id}/comments`, { 
         comment: `${t('status_updated', 'feedback')} ${t('status_to', 'feedback')} ${t(newStatus, 'feedback_status')}` 
       });
+      
+      // Refresh the feedback list
       mutate(feedbackUrl);
       
-      const response = await api.get(`/feedback/${selectedFeedback.id}`);
-      setSelectedFeedback(response.data.data || response.data);
+      // Update the selected feedback with the latest data
+      const feedbackResponse = await api.get(`/feedback/${selectedFeedback.id}`);
+      const updatedFeedback = feedbackResponse.data.data || feedbackResponse.data;
+      setSelectedFeedback({
+        ...updatedFeedback,
+        comments: [...(updatedFeedback.comments || []), commentResponse.data]
+      });
+
+      // Show success message
+      alert(t('status_update_success', 'feedback'));
+      
+      // Close the dialog
+      setSelectedFeedback(null);
     } catch (error: any) {
       console.error('Error updating feedback status:', error);
       const errorMessage = error.response?.data?.message || t('error_updating_status', 'feedback');
@@ -137,17 +153,34 @@ export default function FeedbackPage() {
     if (!selectedFeedback) return;
 
     try {
-      await api.patch(`/feedback/${selectedFeedback.id}`, { category: newCategory });
-      await api.post(`/feedback/${selectedFeedback.id}/comments`, { 
+      // Update category
+      await api.put(`/feedback/${selectedFeedback.id}`, { category: newCategory });
+      
+      // Add category update comment
+      const commentResponse = await api.post(`/feedback/${selectedFeedback.id}/comments`, { 
         comment: `${t('category_updated', 'feedback')} ${t('category_to', 'feedback')} ${t(newCategory, 'feedback_category')}` 
       });
+      
+      // Refresh the feedback list
       mutate(feedbackUrl);
       
-      const response = await api.get(`/feedback/${selectedFeedback.id}`);
-      setSelectedFeedback(response.data.data || response.data);
-    } catch (error) {
+      // Update the selected feedback with the latest data
+      const feedbackResponse = await api.get(`/feedback/${selectedFeedback.id}`);
+      const updatedFeedback = feedbackResponse.data.data || feedbackResponse.data;
+      setSelectedFeedback({
+        ...updatedFeedback,
+        comments: [...(updatedFeedback.comments || []), commentResponse.data]
+      });
+
+      // Show success message
+      alert(t('category_update_success', 'feedback'));
+      
+      // Close the dialog
+      setSelectedFeedback(null);
+    } catch (error: any) {
       console.error('Error updating feedback category:', error);
-      alert(t('error_updating_category', 'feedback'));
+      const errorMessage = error.response?.data?.message || t('error_updating_category', 'feedback');
+      alert(errorMessage);
     }
   };
 
@@ -205,7 +238,7 @@ export default function FeedbackPage() {
               <TableBody>
                 {feedbackList && Array.isArray(feedbackList) && feedbackList.map((feedback) => (
                   <TableRow key={feedback.id}>
-                    <TableCell>{feedback.municipality.name} {t('municipality_suffix', 'feedback')}</TableCell>
+                    <TableCell>{feedback.municipality.name}</TableCell>
                     <TableCell>
                       <Chip
                         label={t(feedback.category, 'feedback_category')}
@@ -236,7 +269,7 @@ export default function FeedbackPage() {
                           setNewCategory(feedback.category);
                         }}
                       >
-                        {t('view_details', 'feedback')}
+                        {t('view_details', 'common')}
                       </Button>
                     </TableCell>
                   </TableRow>
