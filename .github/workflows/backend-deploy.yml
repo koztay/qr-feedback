@@ -82,14 +82,41 @@ jobs:
           envs: REGISTRY,IMAGE_NAME
           script: |
             cd /app
-            # Stop and remove existing containers
-            docker-compose -f docker-compose.prod.yml down --volumes --remove-orphans
-            # Clean up any remaining containers and volumes
-            docker container prune -f
-            docker volume prune -f
-            # Pull and start fresh containers
-            docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml up -d --force-recreate --renew-anon-volumes
+            # Stop and remove the backend container
+            docker-compose -f docker-compose.prod.yml stop backend
+            docker-compose -f docker-compose.prod.yml rm -f backend
+            # Pull the new image
+            docker-compose -f docker-compose.prod.yml pull backend
+            # Start the backend service
+            docker-compose -f docker-compose.prod.yml up -d backend
+            
+            # Wait for PostgreSQL to be ready
+            echo "Waiting for PostgreSQL to be ready..."
+            until docker-compose -f docker-compose.prod.yml exec -T postgres pg_isready -h postgres -p 5432 -U postgres; do
+              echo "PostgreSQL is unavailable - sleeping"
+              sleep 5
+            done
+            echo "PostgreSQL is ready!"
+            
+            # Wait for backend to be stable
+            echo "Waiting for backend to be stable..."
+            for i in {1..30}; do
+              if docker-compose -f docker-compose.prod.yml ps backend | grep -q "Up"; then
+                echo "Backend is up!"
+                break
+              fi
+              echo "Backend is not ready - attempt $i/30"
+              echo "Backend logs:"
+              docker-compose -f docker-compose.prod.yml logs --tail=50 backend
+              sleep 10
+            done
+            
+            # Final check
+            if ! docker-compose -f docker-compose.prod.yml ps backend | grep -q "Up"; then
+              echo "Backend failed to start. Latest logs:"
+              docker-compose -f docker-compose.prod.yml logs --tail=50 backend
+              exit 1
+            fi
 
   database-migrations:
     needs: build-and-deploy
