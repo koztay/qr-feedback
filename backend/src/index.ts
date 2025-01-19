@@ -100,13 +100,13 @@ const apiVersion = process.env.API_VERSION || 'v1';
 const apiRouter = express.Router();
 
 // Root route
-app.get('/', (req: Request, res: Response) => {
+app.get('/', ((req: Request, res: Response) => {
   res.json({
     message: 'Municipal AR Feedback API',
     version: apiVersion,
     docs: `/api/${apiVersion}/docs`
   });
-});
+}) as unknown as express.RequestHandler);
 
 // API Documentation
 const swaggerSetup = swaggerUi.setup(swaggerSpec, {
@@ -116,7 +116,7 @@ const swaggerSetup = swaggerUi.setup(swaggerSpec, {
 });
 
 // Serve Swagger UI at /api/v1/docs
-app.use(`/api/${apiVersion}/docs`, swaggerUi.serve as unknown as express.RequestHandler);
+app.use(`/api/${apiVersion}/docs`, swaggerUi.serve as unknown as express.RequestHandler[]);
 app.get(`/api/${apiVersion}/docs`, swaggerSetup as unknown as express.RequestHandler);
 
 // Apply rate limiting to auth routes
@@ -137,13 +137,13 @@ apiRouter.use('/translations', translationsRouter);
 app.use(`/api/${apiVersion}`, apiRouter);
 
 // Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use(((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
   res.status(500).json({
     error: err.name || 'InternalServerError',
     message: err.message || 'Something went wrong'
   });
-});
+}) as unknown as express.ErrorRequestHandler);
 
 // Start server
 const PORT = process.env.PORT || 3000;
