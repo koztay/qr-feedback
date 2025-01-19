@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { UserRole } from '@prisma/client';
 
 export interface AuthenticatedRequest extends Request {
@@ -8,6 +8,12 @@ export interface AuthenticatedRequest extends Request {
     municipalityId: string | null;
   };
 }
+
+export type AuthenticatedRequestHandler<P = any> = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => Promise<Response | void> | Response | void;
 
 export interface UnauthenticatedRequest extends Request {
   user?: never;

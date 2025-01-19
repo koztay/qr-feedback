@@ -25,7 +25,10 @@ WORKDIR /app/backend
 # Generate Prisma client and types
 RUN yarn prisma generate
 
-# Build TypeScript with types
+# Check TypeScript types
+RUN yarn tsc --noEmit
+
+# Build TypeScript
 RUN yarn build
 
 # Expose the port
