@@ -10,11 +10,12 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-export type AuthenticatedHandler<P = any, ResBody = any, ReqBody = any> = (
-  req: AuthenticatedRequest,
-  res: Response<ResBody>,
-  next: NextFunction
-) => Promise<void | any> | void | any;
+export type AuthenticatedHandler<
+  P = any,
+  ResBody = any,
+  ReqBody = any,
+  ReqQuery = any
+> = AsyncRequestHandler<P, ResBody, ReqBody, ReqQuery>;
 
 export interface UnauthenticatedRequest extends Request {
   user?: never;
@@ -22,5 +23,8 @@ export interface UnauthenticatedRequest extends Request {
 
 // Type guard to check if a request is authenticated
 export function isAuthenticatedRequest(req: Request): req is AuthenticatedRequest {
-  return req.user !== undefined && req.user.id !== undefined;
+  return req.user !== undefined && 
+         'id' in req.user && 
+         'role' in req.user && 
+         'municipalityId' in req.user;
 } 
