@@ -44,9 +44,9 @@ RUN apk add --no-cache openssl
 COPY package.json yarn.lock ./
 COPY backend/package.json ./backend/
 
-# Install production dependencies and Prisma CLI
+# Install production dependencies and Prisma
 RUN yarn workspace backend install --production --frozen-lockfile && \
-    yarn workspace backend add prisma --dev
+    yarn workspace backend add @prisma/client@5.22.0 prisma@5.22.0
 
 # Copy built files from builder stage
 COPY --from=builder /app/backend/dist ./backend/dist
