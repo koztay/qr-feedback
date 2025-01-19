@@ -39,9 +39,10 @@ COPY --from=builder /app/package.json /app/yarn.lock /app/
 COPY --from=builder /app/backend/package.json ./
 RUN yarn install --production --frozen-lockfile
 
-# Copy built files and prisma schema
+# Copy built files, prisma schema, and scripts
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/prisma ./prisma
+COPY --from=builder /app/backend/scripts ./scripts
 
 # Generate Prisma client
 RUN yarn add @prisma/client@5.22.0 && \

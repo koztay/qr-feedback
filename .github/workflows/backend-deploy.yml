@@ -150,5 +150,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /app
-            # Seed translations with explicit database URL
-            docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'export DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/municipal_feedback && yarn seed:translations' 
+            # URL encode the password and run seeding
+            docker-compose -f docker-compose.prod.yml exec -T backend sh -c '
+              ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
+              export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
+              echo "Running seed translations..."
+              yarn ts-node scripts/seed-translations.ts
+            ' 
