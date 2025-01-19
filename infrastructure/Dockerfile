@@ -2,6 +2,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
+
 # Copy workspace configuration
 COPY package.json yarn.lock ./
 
@@ -19,7 +22,10 @@ COPY backend/ ./backend/
 # Set working directory to backend
 WORKDIR /app/backend
 
-# Build the application
+# Generate Prisma client
+RUN yarn prisma generate
+
+# Build TypeScript
 RUN yarn build
 
 # Expose the port
