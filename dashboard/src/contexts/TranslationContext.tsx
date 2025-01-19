@@ -2,31 +2,46 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import type { Language } from './AuthContext';
 import api from '@/lib/api';
+
+export interface SupportedLanguage {
+  code: Language;
+  name: string;
+  nativeName: string;
+}
+
+export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
+  { code: 'TR', name: 'Turkish', nativeName: 'Türkçe' },
+  { code: 'EN', name: 'English', nativeName: 'English' },
+  // Easy to add new languages:
+  // { code: 'RU', name: 'Russian', nativeName: 'Русский' },
+];
 
 interface Translations {
   [key: string]: {
-    [key: string]: string;
+    [key: string]: Record<string, string>;
   };
 }
 
 interface TranslationContextType {
-  language: 'TR' | 'EN';
-  setLanguage: (lang: 'TR' | 'EN') => void;
+  language: string;
+  setLanguage: (lang: string) => void;
   t: (key: string, category?: string) => string;
   isLoading: boolean;
+  supportedLanguages: SupportedLanguage[];
 }
 
 const TranslationContext = createContext<TranslationContextType | undefined>(undefined);
 
 export function TranslationProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [language, setLanguage] = useState<'TR' | 'EN'>('TR');
+  const [language, setLanguage] = useState<string>('TR');
   const [translations, setTranslations] = useState<Translations>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Single effect to handle both initialization and updates
+  // Initialize language from user preferences
   useEffect(() => {
     const initializeLanguage = async () => {
       if (!user?.id || isInitialized) return;
@@ -57,7 +72,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
           if (!organized[item.category]) {
             organized[item.category] = {};
           }
-          organized[item.category][item.key] = item[language.toLowerCase()];
+          organized[item.category][item.key] = item.translations;
         });
         
         setTranslations(organized);
@@ -74,7 +89,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   }, [language, isInitialized]);
 
   // Update user's language preference
-  const handleLanguageChange = async (newLanguage: 'TR' | 'EN') => {
+  const handleLanguageChange = async (newLanguage: string) => {
     if (!user?.id || !isInitialized) return;
     
     setLanguage(newLanguage);
@@ -87,7 +102,12 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 
   const t = (key: string, category: string = 'common') => {
     try {
-      return translations[category]?.[key] || key;
+      const translation = translations[category]?.[key]?.[language];
+      if (!translation) {
+        console.warn(`Missing translation: ${category}.${key} for language ${language}`);
+        return key;
+      }
+      return translation;
     } catch (error) {
       console.error(`Translation error for key: ${key}`, error);
       return key;
@@ -100,7 +120,8 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
         language, 
         setLanguage: handleLanguageChange, 
         t, 
-        isLoading 
+        isLoading,
+        supportedLanguages: SUPPORTED_LANGUAGES
       }}
     >
       {children}

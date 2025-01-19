@@ -28,6 +28,8 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import useSWR, { mutate } from 'swr';
 import api from '@/lib/api';
+import { useTranslation } from '@/contexts/TranslationContext';
+import AppLayout from '@/components/AppLayout';
 
 interface Feedback {
   id: string;
@@ -87,6 +89,7 @@ export default function FeedbackPage() {
   const [newComment, setNewComment] = useState('');
   const [newStatus, setNewStatus] = useState<Feedback['status']>('PENDING');
   const [newCategory, setNewCategory] = useState<Feedback['category']>('INFRASTRUCTURE');
+  const { t } = useTranslation();
 
   // Check if the user can update this specific feedback
   const canUpdateFeedback = (feedback: Feedback) => {
@@ -110,20 +113,22 @@ export default function FeedbackPage() {
   const handleStatusUpdate = async () => {
     if (!selectedFeedback) return;
     if (!canUpdateFeedback(selectedFeedback)) {
-      alert('You do not have permission to update this feedback');
+      alert(t('no_permission', 'feedback'));
       return;
     }
 
     try {
       await api.patch(`/feedback/${selectedFeedback.id}/status`, { status: newStatus });
-      await api.post(`/feedback/${selectedFeedback.id}/comments`, { comment: `Status updated to ${newStatus}` });
+      await api.post(`/feedback/${selectedFeedback.id}/comments`, { 
+        comment: `${t('status_updated', 'feedback')} ${t('status_to', 'feedback')} ${t(newStatus, 'feedback_status')}` 
+      });
       mutate(feedbackUrl);
       
       const response = await api.get(`/feedback/${selectedFeedback.id}`);
       setSelectedFeedback(response.data.data || response.data);
     } catch (error: any) {
       console.error('Error updating feedback status:', error);
-      const errorMessage = error.response?.data?.message || 'Error updating feedback status';
+      const errorMessage = error.response?.data?.message || t('error_updating_status', 'feedback');
       alert(errorMessage);
     }
   };
@@ -133,18 +138,16 @@ export default function FeedbackPage() {
 
     try {
       await api.patch(`/feedback/${selectedFeedback.id}`, { category: newCategory });
-
-      // Add system comment about category change
-      await api.post(`/feedback/${selectedFeedback.id}/comments`, { comment: `Category updated to ${newCategory}` });
-
-      // Refresh feedback data
+      await api.post(`/feedback/${selectedFeedback.id}/comments`, { 
+        comment: `${t('category_updated', 'feedback')} ${t('category_to', 'feedback')} ${t(newCategory, 'feedback_category')}` 
+      });
       mutate(feedbackUrl);
       
-      // Refresh the selected feedback to show the updated category and new comment
-      const updatedFeedback = await api.get(`/feedback/${selectedFeedback.id}`);
-      setSelectedFeedback(updatedFeedback.data);
+      const response = await api.get(`/feedback/${selectedFeedback.id}`);
+      setSelectedFeedback(response.data.data || response.data);
     } catch (error) {
       console.error('Error updating feedback category:', error);
+      alert(t('error_updating_category', 'feedback'));
     }
   };
 
@@ -153,226 +156,225 @@ export default function FeedbackPage() {
 
     try {
       await api.post(`/feedback/${selectedFeedback.id}/comments`, { comment: newComment.trim() });
-
-      // Refresh feedback data
       mutate(feedbackUrl);
       setNewComment('');
       
-      // Refresh the selected feedback to show the new comment
-      const updatedFeedback = await api.get(`/feedback/${selectedFeedback.id}`);
-      setSelectedFeedback(updatedFeedback.data);
+      const response = await api.get(`/feedback/${selectedFeedback.id}`);
+      setSelectedFeedback(response.data.data || response.data);
     } catch (error) {
       console.error('Error adding comment:', error);
+      alert(t('error_adding_comment', 'feedback'));
     }
   };
 
   if (error) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Typography color="error">Error loading feedback</Typography>
+        <Typography color="error">{t('error_loading_feedback', 'feedback')}</Typography>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Feedback Management
-      </Typography>
+    <AppLayout>
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          {t('feedback_management', 'feedback')}
+        </Typography>
 
-      <TableContainer component={Paper}>
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Municipality</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Location</TableCell>
-                <TableCell>Submitted By</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {feedbackList && Array.isArray(feedbackList) && feedbackList.map((feedback) => (
-                <TableRow key={feedback.id}>
-                  <TableCell>{feedback.municipality.name}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={feedback.category}
-                      color={categoryColors[feedback.category]}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>{feedback.description}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={feedback.status}
-                      color={statusColors[feedback.status]}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>{feedback.address}</TableCell>
-                  <TableCell>{feedback.user.name}</TableCell>
-                  <TableCell>
-                    {new Date(feedback.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => {
-                        setSelectedFeedback(feedback);
-                        setNewStatus(feedback.status);
-                        setNewCategory(feedback.category);
-                      }}
-                    >
-                      View Details
-                    </Button>
-                  </TableCell>
+        <TableContainer component={Paper}>
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+              <Typography sx={{ ml: 2 }}>{t('loading', 'common')}</Typography>
+            </Box>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>{t('municipality', 'feedback')}</TableCell>
+                  <TableCell>{t('category', 'feedback')}</TableCell>
+                  <TableCell>{t('description', 'feedback')}</TableCell>
+                  <TableCell>{t('status', 'feedback')}</TableCell>
+                  <TableCell>{t('location', 'feedback')}</TableCell>
+                  <TableCell>{t('submitted_by', 'feedback')}</TableCell>
+                  <TableCell>{t('date', 'feedback')}</TableCell>
+                  <TableCell>{t('actions', 'feedback')}</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </TableContainer>
-
-      {/* Feedback Detail Dialog */}
-      <Dialog
-        open={!!selectedFeedback}
-        onClose={() => setSelectedFeedback(null)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Feedback Details</DialogTitle>
-        <DialogContent>
-          {selectedFeedback && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Description
-              </Typography>
-              <Typography paragraph>{selectedFeedback.description}</Typography>
-
-              <Typography variant="h6" gutterBottom>
-                Location
-              </Typography>
-              <Typography paragraph>{selectedFeedback.address}</Typography>
-
-              <Typography variant="h6" gutterBottom>
-                Images
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                {selectedFeedback.images.map((image, index) => (
-                  <img
-                    key={index}
-                    src={image}
-                    alt={`Feedback image ${index + 1}`}
-                    style={{ width: 100, height: 100, objectFit: 'cover' }}
-                  />
+              </TableHead>
+              <TableBody>
+                {feedbackList && Array.isArray(feedbackList) && feedbackList.map((feedback) => (
+                  <TableRow key={feedback.id}>
+                    <TableCell>{feedback.municipality.name} {t('municipality_suffix', 'feedback')}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={t(feedback.category, 'feedback_category')}
+                        color={categoryColors[feedback.category]}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>{feedback.description}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={t(feedback.status, 'feedback_status')}
+                        color={statusColors[feedback.status]}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>{feedback.address}</TableCell>
+                    <TableCell>{feedback.user.name}</TableCell>
+                    <TableCell>
+                      {new Date(feedback.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          setSelectedFeedback(feedback);
+                          setNewStatus(feedback.status);
+                          setNewCategory(feedback.category);
+                        }}
+                      >
+                        {t('view_details', 'feedback')}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </Box>
+              </TableBody>
+            </Table>
+          )}
+        </TableContainer>
 
-              {/* Status Update */}
-              {canUpdateFeedback(selectedFeedback) && (
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Status Update
-                  </Typography>
-                  <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                      value={newStatus}
-                      label="Status"
-                      onChange={(e) => setNewStatus(e.target.value as Feedback['status'])}
-                    >
-                      <MenuItem value="PENDING">Pending</MenuItem>
-                      <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
-                      <MenuItem value="RESOLVED">Resolved</MenuItem>
-                      <MenuItem value="REJECTED">Rejected</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <Button variant="contained" onClick={handleStatusUpdate}>
-                    UPDATE STATUS
-                  </Button>
+        {/* Feedback Detail Dialog */}
+        <Dialog
+          open={!!selectedFeedback}
+          onClose={() => setSelectedFeedback(null)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>{t('feedback_details', 'feedback')}</DialogTitle>
+          <DialogContent>
+            {selectedFeedback && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  {t('description', 'feedback')}
+                </Typography>
+                <Typography paragraph>{selectedFeedback.description}</Typography>
+
+                <Typography variant="h6" gutterBottom>
+                  {t('location', 'feedback')}
+                </Typography>
+                <Typography paragraph>{selectedFeedback.address}</Typography>
+
+                <Typography variant="h6" gutterBottom>
+                  {t('images', 'feedback')}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                  {selectedFeedback.images.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt={`${t('image_alt', 'feedback')} ${index + 1}`}
+                      style={{ width: 100, height: 100, objectFit: 'cover' }}
+                    />
+                  ))}
                 </Box>
-              )}
 
-              {/* Category Update */}
-              {canUpdateFeedback(selectedFeedback) && (
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Category Update
-                  </Typography>
-                  <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>Category</InputLabel>
-                    <Select
-                      value={newCategory}
-                      label="Category"
-                      onChange={(e) => setNewCategory(e.target.value as Feedback['category'])}
-                    >
-                      <MenuItem value="INFRASTRUCTURE">Infrastructure</MenuItem>
-                      <MenuItem value="SAFETY">Safety</MenuItem>
-                      <MenuItem value="CLEANLINESS">Cleanliness</MenuItem>
-                      <MenuItem value="OTHER">Other</MenuItem>
-                    </Select>
-                  </FormControl>
+                {/* Status Update */}
+                {canUpdateFeedback(selectedFeedback) && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      {t('update_status', 'feedback')}
+                    </Typography>
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                      <InputLabel>{t('status', 'feedback')}</InputLabel>
+                      <Select
+                        value={newStatus}
+                        label={t('status', 'feedback')}
+                        onChange={(e) => setNewStatus(e.target.value as Feedback['status'])}
+                      >
+                        <MenuItem value="PENDING">{t('PENDING', 'feedback_status')}</MenuItem>
+                        <MenuItem value="IN_PROGRESS">{t('IN_PROGRESS', 'feedback_status')}</MenuItem>
+                        <MenuItem value="RESOLVED">{t('RESOLVED', 'feedback_status')}</MenuItem>
+                        <MenuItem value="REJECTED">{t('REJECTED', 'feedback_status')}</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <Button variant="contained" onClick={handleStatusUpdate}>
+                      {t('update_status', 'feedback')}
+                    </Button>
+                  </Box>
+                )}
+
+                {/* Category Update */}
+                {canUpdateFeedback(selectedFeedback) && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      {t('update_category', 'feedback')}
+                    </Typography>
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                      <InputLabel>{t('category', 'feedback')}</InputLabel>
+                      <Select
+                        value={newCategory}
+                        label={t('category', 'feedback')}
+                        onChange={(e) => setNewCategory(e.target.value as Feedback['category'])}
+                      >
+                        <MenuItem value="INFRASTRUCTURE">{t('INFRASTRUCTURE', 'feedback_category')}</MenuItem>
+                        <MenuItem value="SAFETY">{t('SAFETY', 'feedback_category')}</MenuItem>
+                        <MenuItem value="CLEANLINESS">{t('CLEANLINESS', 'feedback_category')}</MenuItem>
+                        <MenuItem value="OTHER">{t('OTHER', 'feedback_category')}</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <Button variant="contained" onClick={handleCategoryUpdate}>
+                      {t('update_category', 'feedback')}
+                    </Button>
+                  </Box>
+                )}
+
+                <Typography variant="h6" gutterBottom>
+                  {t('comments', 'feedback')}
+                </Typography>
+                <Box sx={{ mb: 2 }}>
+                  {selectedFeedback.comments && Array.isArray(selectedFeedback.comments) && selectedFeedback.comments.map((comment) => (
+                    <Paper key={comment.id} sx={{ p: 2, mb: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {t('comment_by', 'feedback')}: {comment.user.name} - {t('comment_date_format', 'feedback')}: {new Date(comment.createdAt).toLocaleString()}
+                      </Typography>
+                      <Typography>{comment.comment}</Typography>
+                    </Paper>
+                  ))}
+                  {(!selectedFeedback.comments || selectedFeedback.comments.length === 0) && (
+                    <Typography color="text.secondary">{t('no_comments', 'feedback')}</Typography>
+                  )}
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    fullWidth
+                    label={t('add_comment', 'feedback')}
+                    multiline
+                    rows={2}
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                  />
                   <Button
                     variant="contained"
-                    onClick={handleCategoryUpdate}
-                    sx={{ mb: 3 }}
+                    onClick={handleAddComment}
+                    sx={{ alignSelf: 'flex-end' }}
                   >
-                    Update Category
+                    {t('add_comment', 'feedback')}
                   </Button>
                 </Box>
-              )}
-
-              <Typography variant="h6" gutterBottom>
-                Comments
-              </Typography>
-              <Box sx={{ mb: 2 }}>
-                {selectedFeedback.comments && Array.isArray(selectedFeedback.comments) && selectedFeedback.comments.map((comment) => (
-                  <Paper key={comment.id} sx={{ p: 2, mb: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {comment.user.name} - {new Date(comment.createdAt).toLocaleString()}
-                    </Typography>
-                    <Typography>{comment.comment}</Typography>
-                  </Paper>
-                ))}
-                {(!selectedFeedback.comments || selectedFeedback.comments.length === 0) && (
-                  <Typography color="text.secondary">No comments yet</Typography>
-                )}
               </Box>
-
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <TextField
-                  fullWidth
-                  label="Add a comment"
-                  multiline
-                  rows={2}
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                />
-                <Button
-                  variant="contained"
-                  onClick={handleAddComment}
-                  sx={{ alignSelf: 'flex-end' }}
-                >
-                  Add Comment
-                </Button>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSelectedFeedback(null)}>Close</Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setSelectedFeedback(null)}>
+              {t('close_dialog', 'feedback')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </AppLayout>
   );
 } 

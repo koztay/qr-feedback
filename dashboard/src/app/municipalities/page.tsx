@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Container,
   Typography,
@@ -15,11 +15,18 @@ import {
   Box,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
+import { useTranslation } from '@/contexts/TranslationContext';
+import AppLayout from '@/components/AppLayout';
 
 interface Municipality {
   id: string;
@@ -33,6 +40,12 @@ interface Municipality {
     users: number;
     feedback: number;
   };
+  qrCodeCount?: number;
+}
+
+interface MunicipalityFormData {
+  name: string;
+  city: string;
 }
 
 const fetchMunicipalities = async () => {
@@ -43,7 +56,49 @@ const fetchMunicipalities = async () => {
 export default function MunicipalitiesPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { data: municipalities, error } = useSWR<Municipality[]>('municipalities', fetchMunicipalities);
+  const [selectedMunicipality, setSelectedMunicipality] = useState<Municipality | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formData, setFormData] = useState<MunicipalityFormData>({
+    name: '',
+    city: ''
+  });
+  const { t } = useTranslation();
+
+  const { data: municipalities, error, isLoading } = useSWR<Municipality[]>('/municipalities', fetchMunicipalities);
+
+  const handleSubmit = async () => {
+    try {
+      if (selectedMunicipality) {
+        await api.patch(`/municipalities/${selectedMunicipality.id}`, formData);
+        alert(t('municipality_updated', 'municipalities'));
+      } else {
+        await api.post('/municipalities', formData);
+        alert(t('municipality_added', 'municipalities'));
+      }
+      setDialogOpen(false);
+      mutate('/municipalities');
+    } catch (error) {
+      console.error('Error submitting municipality:', error);
+      alert(selectedMunicipality 
+        ? t('error_updating_municipality', 'municipalities')
+        : t('error_adding_municipality', 'municipalities')
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (selectedMunicipality) {
+      setFormData({
+        name: selectedMunicipality.name,
+        city: selectedMunicipality.city
+      });
+    } else {
+      setFormData({
+        name: '',
+        city: ''
+      });
+    }
+  }, [selectedMunicipality]);
 
   useEffect(() => {
     // Check if user has access to municipalities page
@@ -55,7 +110,7 @@ export default function MunicipalitiesPage() {
   if (error) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Alert severity="error">Failed to load municipalities</Alert>
+        <Typography color="error">{t('error_loading_municipalities', 'municipalities')}</Typography>
       </Container>
     );
   }
@@ -71,74 +126,92 @@ export default function MunicipalitiesPage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Municipalities
-        </Typography>
-        {user?.role === 'ADMIN' && (
+    <AppLayout>
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
+          <Typography variant="h4" component="h1">
+            {t('municipalities_management', 'municipalities')}
+          </Typography>
           <Button
             variant="contained"
-            color="primary"
-            onClick={() => router.push('/municipalities/new')}
+            onClick={() => {
+              setSelectedMunicipality(null);
+              setDialogOpen(true);
+            }}
           >
-            Add Municipality
+            {t('add_municipality', 'municipalities')}
           </Button>
-        )}
-      </Box>
+        </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>City</TableCell>
-              <TableCell>State</TableCell>
-              <TableCell>Country</TableCell>
-              <TableCell>Contact Email</TableCell>
-              <TableCell>Subscription Status</TableCell>
-              <TableCell>Users</TableCell>
-              <TableCell>Feedback</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {municipalities.map((municipality) => (
-              <TableRow key={municipality.id}>
-                <TableCell>{municipality.name}</TableCell>
-                <TableCell>{municipality.city}</TableCell>
-                <TableCell>{municipality.state}</TableCell>
-                <TableCell>{municipality.country}</TableCell>
-                <TableCell>{municipality.contactEmail}</TableCell>
-                <TableCell>{municipality.subscriptionStatus}</TableCell>
-                <TableCell>{municipality._count?.users || 0}</TableCell>
-                <TableCell>{municipality._count?.feedback || 0}</TableCell>
-                <TableCell align="right">
-                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      size="small"
-                      onClick={() => router.push(`/?municipalityId=${municipality.id}`)}
-                    >
-                      View Dashboard
-                    </Button>
-                    {user?.role === 'ADMIN' && (
+        <TableContainer component={Paper}>
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+              <Typography sx={{ ml: 2 }}>{t('loading', 'common')}</Typography>
+            </Box>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>{t('municipality_name', 'municipalities')}</TableCell>
+                  <TableCell>{t('city', 'municipalities')}</TableCell>
+                  <TableCell>{t('qr_code_count', 'municipalities')}</TableCell>
+                  <TableCell>{t('actions', 'common')}</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {municipalities?.map((municipality) => (
+                  <TableRow key={municipality.id}>
+                    <TableCell>{municipality.name}</TableCell>
+                    <TableCell>{municipality.city}</TableCell>
+                    <TableCell>{municipality.qrCodeCount || 0}</TableCell>
+                    <TableCell>
                       <Button
                         variant="outlined"
                         size="small"
-                        onClick={() => router.push(`/municipalities/${municipality.id}`)}
+                        onClick={() => {
+                          setSelectedMunicipality(municipality);
+                          setDialogOpen(true);
+                        }}
                       >
-                        Edit
+                        {t('edit', 'common')}
                       </Button>
-                    )}
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Container>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </TableContainer>
+
+        {/* Municipality Form Dialog */}
+        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            {selectedMunicipality ? t('edit_municipality', 'municipalities') : t('add_municipality', 'municipalities')}
+          </DialogTitle>
+          <DialogContent>
+            <Box component="form" sx={{ mt: 2 }}>
+              <TextField
+                fullWidth
+                label={t('municipality_name', 'municipalities')}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={t('city', 'municipalities')}
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDialogOpen(false)}>{t('cancel', 'common')}</Button>
+            <Button variant="contained" onClick={handleSubmit}>{t('submit', 'common')}</Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </AppLayout>
   );
 } 

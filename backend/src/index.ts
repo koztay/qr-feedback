@@ -115,8 +115,9 @@ const swaggerSetup = swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'Municipal AR Feedback API Documentation'
 });
 
-app.use(`/api/${apiVersion}/docs`, swaggerUi.serve);
-app.get(`/api/${apiVersion}/docs`, swaggerSetup);
+// Serve Swagger UI at /api/v1/docs
+app.use(`/api/${apiVersion}/docs`, swaggerUi.serve as unknown as express.RequestHandler);
+app.get(`/api/${apiVersion}/docs`, swaggerSetup as unknown as express.RequestHandler);
 
 // Apply rate limiting to auth routes
 apiRouter.use('/auth', authLimiter);

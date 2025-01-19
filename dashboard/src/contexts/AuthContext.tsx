@@ -5,7 +5,9 @@ import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
 
-interface User {
+export type Language = 'TR' | 'EN';
+
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -15,6 +17,7 @@ interface User {
     name: string;
     city: string;
   };
+  language: Language;
 }
 
 interface AuthContextType {
@@ -24,6 +27,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   checkSession: () => Promise<void>;
+  setUser: (user: User | null) => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const [isLoading, setIsLoading] = useState(true);
 
   const checkSession = async () => {
     try {
@@ -109,8 +115,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, pathname]);
 
+  const value = {
+    user,
+    loading,
+    error,
+    login,
+    logout,
+    checkSession,
+    setUser,
+    isLoading
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout, checkSession }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

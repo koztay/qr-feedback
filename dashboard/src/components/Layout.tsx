@@ -14,7 +14,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === '/login';
   const isAdmin = user?.role === 'ADMIN';
   const isMunicipalityAdmin = user?.role === 'MUNICIPALITY_ADMIN';
-  const { language, setLanguage } = useTranslation();
+  const { language, setLanguage, t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleLogout = () => {
@@ -99,7 +99,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            QR Feedback
+            {t('app_name', 'common')}
           </Typography>
           {user && (
             <>
@@ -109,7 +109,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   sx={{ mr: 2 }}
                   onClick={() => router.push('/feedback')}
                 >
-                  Feedback
+                  {t('feedback', 'navigation')}
                 </Button>
               )}
               {isAdmin && (
@@ -119,14 +119,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     sx={{ mr: 2 }}
                     onClick={() => router.push('/municipalities')}
                   >
-                    Municipalities
+                    {t('municipalities', 'navigation')}
                   </Button>
                   <Button
                     color="inherit"
                     sx={{ mr: 2 }}
                     onClick={() => router.push('/users')}
                   >
-                    Users
+                    {t('users', 'navigation')}
+                  </Button>
+                  <Button
+                    color="inherit"
+                    sx={{ mr: 2 }}
+                    onClick={() => router.push('/translations')}
+                  >
+                    {t('translations', 'navigation')}
                   </Button>
                 </>
               )}
@@ -135,7 +142,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 onClick={handleLogout}
                 startIcon={<LogoutIcon />}
               >
-                Logout
+                {t('logout', 'common')}
               </Button>
             </>
           )}

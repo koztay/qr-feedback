@@ -1,11 +1,20 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../index';
 import { authenticateToken } from '../middleware/auth';
+import { User, UserRole, Language } from '@prisma/client';
 
 const router = Router();
+
+type AuthenticatedRequest = Request & {
+  user: {
+    id: string;
+    role: UserRole;
+    municipalityId: string | null;
+  };
+};
 
 // Validation schema for login
 const loginSchema = z.object({
@@ -27,35 +36,25 @@ const loginSchema = z.object({
  *       401:
  *         description: Not authenticated
  */
-router.get('/me', authenticateToken, async (req, res) => {
+router.get('/me', authenticateToken, (async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        name: true,
-        municipalityId: true,
-        municipality: {
-          select: {
-            name: true,
-            city: true
-          }
-        }
-      }
+      include: {
+        municipality: true,
+      },
     });
 
     if (!user) {
-      return res.status(401).json({ error: 'User not found' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     res.json(user);
   } catch (error) {
-    console.error('Get current user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
-});
+}) as unknown as (req: Request, res: Response) => Promise<void>);
 
 /**
  * @swagger
