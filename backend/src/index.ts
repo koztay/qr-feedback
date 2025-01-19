@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction, RequestHandler, ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -55,8 +55,8 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 const swaggerSetup = swaggerUi.setup(swaggerDocs);
 
 // Swagger UI route
-app.use(`/api/${apiVersion}/docs`, swaggerUi.serve);
-app.get(`/api/${apiVersion}/docs`, swaggerSetup);
+app.use(`/api/${apiVersion}/docs`, swaggerUi.serve as unknown as RequestHandler[]);
+app.get(`/api/${apiVersion}/docs`, swaggerSetup as unknown as RequestHandler);
 
 // Import route handlers
 import authRouter from './routes/auth';
@@ -73,15 +73,18 @@ app.use(`/api/${apiVersion}/users`, usersRouter);
 app.use(`/api/${apiVersion}/translations`, translationsRouter);
 
 // Health check
-app.get('/', (req: express.Request, res: express.Response) => {
+const healthCheck: RequestHandler = (_req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
-});
+};
+app.get('/', healthCheck);
 
 // Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something broke!' });
-});
+  next(err);
+};
+app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
