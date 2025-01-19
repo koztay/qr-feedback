@@ -22,11 +22,11 @@ COPY backend/ ./backend/
 # Set working directory to backend
 WORKDIR /app/backend
 
-# Generate Prisma client
+# Generate Prisma client and types
 RUN yarn prisma generate
 
-# Build TypeScript
-RUN yarn build
+# Build TypeScript with types
+RUN yarn tsc --project tsconfig.json
 
 # Expose the port
 EXPOSE 3000
