@@ -47,7 +47,7 @@ RUN apk add --no-cache openssl
 COPY --from=builder /app/package.json /app/yarn.lock /app/
 COPY --from=builder /app/backend/package.json ./
 RUN yarn install --production --frozen-lockfile && \
-    yarn add ts-node typescript @types/node --dev
+    yarn add ts-node@10.9.2 typescript@5.3.3 @types/node@20.11.19 --dev
 
 # Copy built files, prisma schema, and scripts
 COPY --from=builder /app/backend/dist ./dist
