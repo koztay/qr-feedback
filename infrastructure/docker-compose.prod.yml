@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ${REGISTRY}/${IMAGE_NAME}:latest
+    restart: always
+    depends_on:
+      - postgres
+    env_file:
+      - .env.production
+    ports:
+      - "3000:3000"
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env.production
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data: 
