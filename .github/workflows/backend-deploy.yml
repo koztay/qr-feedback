@@ -82,8 +82,14 @@ jobs:
           envs: REGISTRY,IMAGE_NAME
           script: |
             cd /app
+            # Stop and remove existing containers
+            docker-compose -f docker-compose.prod.yml down --volumes --remove-orphans
+            # Clean up any remaining containers and volumes
+            docker container prune -f
+            docker volume prune -f
+            # Pull and start fresh containers
             docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml up -d
+            docker-compose -f docker-compose.prod.yml up -d --force-recreate --renew-anon-volumes
 
   database-migrations:
     needs: build-and-deploy

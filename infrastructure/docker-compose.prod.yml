@@ -10,6 +10,9 @@ services:
       - .env.production
     ports:
       - "3000:3000"
+    tmpfs:
+      - /app/backend/node_modules
+      - /app/backend/dist
 
   postgres:
     image: postgres:15-alpine
