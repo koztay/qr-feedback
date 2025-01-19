@@ -18,10 +18,16 @@ COPY dashboard/package.json ./dashboard/
 RUN yarn install --frozen-lockfile
 
 # Copy backend files
-COPY backend/ ./backend/
+COPY backend/scripts ./backend/scripts
+COPY backend/src ./backend/src
+COPY backend/prisma ./backend/prisma
+COPY backend/tsconfig.json ./backend/
 
-# Verify scripts directory exists
-RUN ls -la ./backend/scripts || exit 1
+# Verify scripts directory exists and show contents
+RUN echo "Verifying scripts directory:" && \
+    ls -la ./backend/scripts && \
+    echo "Contents of scripts directory:" && \
+    cat ./backend/scripts/seed-translations.ts
 
 # Set working directory to backend
 WORKDIR /app/backend
