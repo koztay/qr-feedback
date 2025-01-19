@@ -2,11 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy root package files
+# Copy workspace configuration
 COPY package.json yarn.lock ./
 
-# Copy backend package files
+# Copy workspace packages
 COPY backend/package.json ./backend/
+COPY mobile-app/package.json ./mobile-app/
+COPY dashboard/package.json ./dashboard/
 
 # Install dependencies
 RUN yarn install --frozen-lockfile
