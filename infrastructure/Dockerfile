@@ -47,10 +47,10 @@ RUN yarn workspace backend install --production --frozen-lockfile
 # Copy built files from builder stage
 COPY --from=builder /app/backend/dist ./backend/dist
 COPY --from=builder /app/backend/prisma ./backend/prisma
-COPY --from=builder /app/backend/node_modules/.prisma ./backend/node_modules/.prisma
 
-# Set working directory to backend
+# Generate Prisma client in production
 WORKDIR /app/backend
+RUN yarn prisma generate
 
 # Expose the port
 EXPOSE 3000
