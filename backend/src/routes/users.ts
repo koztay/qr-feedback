@@ -7,15 +7,8 @@ import { authenticateToken, requireRole } from '../middleware/auth';
 const router = Router();
 const prisma = new PrismaClient();
 
-interface AuthenticatedRequest extends Request {
-  user: {
-    id: string;
-    role: string;
-  };
-}
-
 // Get all users
-router.get('/', authenticateToken, requireRole(['ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -43,7 +36,7 @@ router.get('/', authenticateToken, requireRole(['ADMIN']), async (req: Authentic
 });
 
 // Get user by ID
-router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const user = await prisma.user.findUnique({
@@ -77,7 +70,7 @@ router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Res
 });
 
 // Create user
-router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const { password, ...userData } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -112,7 +105,7 @@ router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: Authenti
 });
 
 // Update user
-router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
+router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { password, ...userData } = req.body;
@@ -150,7 +143,7 @@ router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Authen
 });
 
 // Update user language
-router.patch('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.patch('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { language } = req.body;
@@ -188,7 +181,7 @@ router.patch('/:id', authenticateToken, async (req: AuthenticatedRequest, res: R
 });
 
 // Delete user
-router.delete('/:id', authenticateToken, requireRole(['ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.user.delete({

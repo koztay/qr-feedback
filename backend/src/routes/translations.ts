@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Translation } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -34,13 +34,15 @@ router.get('/:language', async (req: Request, res: Response) => {
     });
 
     // Transform translations into a nested object structure
-    const transformedTranslations = translations.reduce((acc, translation) => {
+    const transformedTranslations = translations.reduce<Record<string, Record<string, string>>>((acc, translation) => {
       if (!acc[translation.category]) {
         acc[translation.category] = {};
       }
-      acc[translation.category][translation.key] = translation.translations[language as keyof typeof translation.translations];
+      const translationObj = translation.translations || {};
+      const value = translationObj[language as keyof typeof translationObj] || '';
+      acc[translation.category][translation.key] = value;
       return acc;
-    }, {} as Record<string, Record<string, string>>);
+    }, {});
 
     res.json(transformedTranslations);
   } catch (error) {
