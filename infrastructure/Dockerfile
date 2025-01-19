@@ -1,5 +1,6 @@
 FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
 # Install build dependencies
@@ -30,6 +31,9 @@ RUN yarn tsc --noEmit --pretty
 
 # Build TypeScript
 RUN yarn build
+
+# Clean up dev dependencies
+RUN yarn install --production --frozen-lockfile
 
 # Expose the port
 EXPOSE 3000
