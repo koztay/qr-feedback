@@ -24,6 +24,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Clean up server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker system prune -af
+            docker volume prune -f
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:

@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:18-alpine as builder
 
 # Set working directory
 WORKDIR /app
@@ -32,8 +32,25 @@ RUN yarn tsc --noEmit --pretty
 # Build TypeScript
 RUN yarn build
 
-# Clean up dev dependencies
-RUN yarn install --production --frozen-lockfile
+# Start a new stage for a smaller production image
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json yarn.lock ./
+COPY backend/package.json ./backend/
+
+# Install production dependencies only
+RUN yarn workspace backend install --production --frozen-lockfile
+
+# Copy built files from builder stage
+COPY --from=builder /app/backend/dist ./backend/dist
+COPY --from=builder /app/backend/prisma ./backend/prisma
+COPY --from=builder /app/backend/node_modules/.prisma ./backend/node_modules/.prisma
+
+# Set working directory to backend
+WORKDIR /app/backend
 
 # Expose the port
 EXPOSE 3000
