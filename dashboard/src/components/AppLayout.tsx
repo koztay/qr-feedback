@@ -19,7 +19,7 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { t } = useTranslation();
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
@@ -99,8 +99,7 @@ export default function AppLayout({
             <Button
               color="inherit"
               onClick={() => {
-                // Handle logout
-                router.push('/login');
+                logout();
               }}
             >
               {t('logout', 'common')}

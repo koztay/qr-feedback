@@ -42,18 +42,24 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   const [isInitialized, setIsInitialized] = useState(false);
   const missingTranslationsRef = React.useRef<Set<string>>(new Set());
 
-  // Initialize language from user preferences
+  // Initialize language from user preferences or localStorage
   useEffect(() => {
     const initializeLanguage = async () => {
-      if (!user?.id || isInitialized) return;
+      if (isInitialized) return;
       
       try {
-        const response = await api.get(`/users/${user.id}`);
-        const userLanguage = response.data.language || 'TR';
-        setLanguage(userLanguage);
-        setIsInitialized(true);
+        if (user?.id) {
+          const response = await api.get(`/users/${user.id}`);
+          const userLanguage = response.data.language || 'TR';
+          setLanguage(userLanguage);
+        } else {
+          // Use localStorage for non-authenticated users
+          const savedLanguage = localStorage.getItem('preferredLanguage') || 'TR';
+          setLanguage(savedLanguage);
+        }
       } catch (error) {
         console.error('Error fetching user language:', error);
+      } finally {
         setIsInitialized(true);
       }
     };
@@ -91,19 +97,23 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     if (isInitialized) {
       fetchTranslations();
     }
-  }, [isInitialized]); // Only fetch when initialized, not on language change
+  }, [isInitialized]); // Only fetch when initialized
 
-  // Update user's language preference
+  // Update language preference
   const handleLanguageChange = async (newLanguage: string) => {
-    if (!user?.id || !isInitialized) return;
-    
     setLanguage(newLanguage);
     // Clear missing translations cache when language changes
     missingTranslationsRef.current.clear();
-    try {
-      await api.patch(`/users/${user.id}`, { language: newLanguage });
-    } catch (error) {
-      console.error('Error updating user language:', error);
+    
+    if (user?.id) {
+      try {
+        await api.patch(`/users/${user.id}`, { language: newLanguage });
+      } catch (error) {
+        console.error('Error updating user language:', error);
+      }
+    } else {
+      // Store in localStorage for non-authenticated users
+      localStorage.setItem('preferredLanguage', newLanguage);
     }
   };
 
