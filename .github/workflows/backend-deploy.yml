@@ -134,8 +134,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /app
-            # Run migrations with explicit network configuration
-            docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'DATABASE_URL="postgresql://postgres:$POSTGRES_PASSWORD@postgres:5432/municipal_feedback?schema=public&connect_timeout=300" yarn prisma migrate deploy'
+            # Run migrations with explicit database URL
+            docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'export DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/municipal_feedback && yarn prisma migrate deploy'
 
       - name: Seed translations
         uses: appleboy/ssh-action@master
@@ -145,4 +145,5 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /app
-            docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'DATABASE_URL="postgresql://postgres:$POSTGRES_PASSWORD@postgres:5432/municipal_feedback?schema=public" yarn seed:translations' 
+            # Seed translations with explicit database URL
+            docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'export DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/municipal_feedback && yarn seed:translations' 
