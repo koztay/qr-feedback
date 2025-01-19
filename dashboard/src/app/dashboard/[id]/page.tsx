@@ -56,6 +56,15 @@ const fetchDashboardStats = async (id: string) => {
   return response.data;
 };
 
+type FeedbackCategory = 'Altyapı' | 'Güvenlik' | 'Temizlik' | 'Diğer';
+
+const categoryColors: Record<FeedbackCategory, string> = {
+  'Altyapı': '#2196F3',
+  'Güvenlik': '#DC3545',
+  'Temizlik': '#17A2B8',
+  'Diğer': '#6C757D'
+};
+
 export default function MunicipalityDashboard() {
   const { id } = useParams();
   const { t } = useTranslation();
@@ -109,7 +118,21 @@ export default function MunicipalityDashboard() {
       {
         label: t('feedback_count', 'dashboard'),
         data: Object.values(stats.feedbackByCategory || {}),
-        backgroundColor: '#1976d2',
+        backgroundColor: Object.keys(stats.feedbackByCategory || {}).map(category => {
+          switch (category) {
+            case 'CLEANLINESS':
+              return '#00BCD4'; // Temizlik - Cyan Blue (same as feedback list)
+            case 'SAFETY':
+              return '#DC3545'; // Güvenlik - Red
+            case 'INFRASTRUCTURE':
+              return '#2196F3'; // Altyapı - Blue
+            case 'OTHER':
+              return '#6C757D'; // Diğer - Gray
+            default:
+              return '#6C757D';
+          }
+        }),
+        borderWidth: 1,
       },
     ],
   };

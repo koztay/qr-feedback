@@ -76,11 +76,11 @@ const statusColors: Record<Feedback['status'], 'default' | 'warning' | 'success'
   REJECTED: 'error',
 };
 
-const categoryColors: Record<Feedback['category'], 'default' | 'primary' | 'secondary' | 'info' | 'error'> = {
-  INFRASTRUCTURE: 'primary',
-  SAFETY: 'error',
-  CLEANLINESS: 'info',
-  OTHER: 'default',
+const categoryStyles = {
+  INFRASTRUCTURE: { backgroundColor: '#2196F3', color: 'white' }, // Altyapı - Blue
+  SAFETY: { backgroundColor: '#DC3545', color: 'white' },        // Güvenlik - Red
+  CLEANLINESS: { backgroundColor: '#00BCD4', color: 'white' },   // Temizlik - Cyan Blue
+  OTHER: { backgroundColor: '#6C757D', color: 'white' },         // Diğer - Gray
 };
 
 export default function FeedbackPage() {
@@ -242,7 +242,7 @@ export default function FeedbackPage() {
                     <TableCell>
                       <Chip
                         label={t(feedback.category, 'feedback_category')}
-                        color={categoryColors[feedback.category]}
+                        sx={categoryStyles[feedback.category]}
                         size="small"
                       />
                     </TableCell>
