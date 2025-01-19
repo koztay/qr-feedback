@@ -1,4 +1,5 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
+import type { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { authenticateToken, requireRole } from '../middleware/auth';
@@ -6,8 +7,15 @@ import { authenticateToken, requireRole } from '../middleware/auth';
 const router = Router();
 const prisma = new PrismaClient();
 
+interface AuthenticatedRequest extends Request {
+  user: {
+    id: string;
+    role: string;
+  };
+}
+
 // Get all users
-router.get('/', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+router.get('/', authenticateToken, requireRole(['ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -16,6 +24,7 @@ router.get('/', authenticateToken, requireRole(['ADMIN']), async (req: Request, 
         email: true,
         role: true,
         municipalityId: true,
+        language: true,
         municipality: {
           select: {
             id: true,
@@ -34,7 +43,7 @@ router.get('/', authenticateToken, requireRole(['ADMIN']), async (req: Request, 
 });
 
 // Get user by ID
-router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
+router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
     const user = await prisma.user.findUnique({
@@ -45,6 +54,7 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
         email: true,
         role: true,
         municipalityId: true,
+        language: true,
         municipality: {
           select: {
             id: true,
@@ -67,7 +77,7 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // Create user
-router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { password, ...userData } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -83,6 +93,7 @@ router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: Request,
         email: true,
         role: true,
         municipalityId: true,
+        language: true,
         municipality: {
           select: {
             id: true,
@@ -101,7 +112,7 @@ router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: Request,
 });
 
 // Update user
-router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { password, ...userData } = req.body;
@@ -120,6 +131,7 @@ router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Reques
         email: true,
         role: true,
         municipalityId: true,
+        language: true,
         municipality: {
           select: {
             id: true,
@@ -137,8 +149,46 @@ router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Reques
   }
 });
 
+// Update user language
+router.patch('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { language } = req.body;
+
+    // Verify this is the user's own profile or an admin
+    if (req.user.id !== id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Not authorized to update this user' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { language },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        municipalityId: true,
+        language: true,
+        municipality: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+          },
+        },
+      },
+    });
+
+    res.json(user);
+  } catch (error) {
+    console.error('Error updating user language:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Delete user
-router.delete('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+router.delete('/:id', authenticateToken, requireRole(['ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.user.delete({
