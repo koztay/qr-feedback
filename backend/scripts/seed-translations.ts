@@ -125,7 +125,7 @@ const defaultTranslations = [
     key: 'dashboard',
     category: 'navigation',
     translations: {
-      TR: 'PANEL',
+      TR: 'Panel',
       EN: 'Dashboard'
     }
   },
@@ -133,7 +133,7 @@ const defaultTranslations = [
     key: 'feedback',
     category: 'navigation',
     translations: {
-      TR: 'GERİ BİLDİRİMLER',
+      TR: 'Geri Bildirimler',
       EN: 'Feedback'
     }
   },
@@ -141,7 +141,7 @@ const defaultTranslations = [
     key: 'municipalities',
     category: 'navigation',
     translations: {
-      TR: 'BELEDİYELER',
+      TR: 'Belediyeler',
       EN: 'Municipalities'
     }
   },
@@ -149,7 +149,7 @@ const defaultTranslations = [
     key: 'users',
     category: 'navigation',
     translations: {
-      TR: 'KULLANICILAR',
+      TR: 'Kullanıcılar',
       EN: 'Users'
     }
   },
@@ -157,7 +157,7 @@ const defaultTranslations = [
     key: 'translations',
     category: 'navigation',
     translations: {
-      TR: 'ÇEVİRİLER',
+      TR: 'Çeviriler',
       EN: 'Translations'
     }
   },
@@ -166,7 +166,7 @@ const defaultTranslations = [
     key: 'logout',
     category: 'common',
     translations: {
-      TR: 'ÇIKIŞ',
+      TR: 'Çıkış Yap',
       EN: 'Logout'
     }
   },

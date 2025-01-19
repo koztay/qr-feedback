@@ -8,7 +8,7 @@ import {
   Toolbar,
   Typography
 } from '@mui/material';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/TranslationContext';
 import LanguageSelector from './LanguageSelector';
@@ -21,7 +21,8 @@ export default function AppLayout({
   const router = useRouter();
   const { user } = useAuth();
   const { t } = useTranslation();
-  const isLoginPage = window.location.pathname === '/login';
+  const pathname = usePathname();
+  const isLoginPage = pathname === '/login';
 
   if (isLoginPage) {
     return (

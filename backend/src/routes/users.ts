@@ -1,42 +1,117 @@
-import { Router } from 'express';
-import { prisma } from '../index';
-import { authenticateToken } from '../middleware/auth';
+import { Router, Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { Request, Response } from 'express';
+import { authenticateToken, requireRole } from '../middleware/auth';
 
 const router = Router();
+const prisma = new PrismaClient();
 
-// Update user
-router.patch('/:id', authenticateToken, async (req: Request, res: Response) => {
+// Get all users
+router.get('/', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        municipalityId: true,
+        municipality: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+          },
+        },
+      },
+    });
+
+    res.json({ data: users });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get user by ID
+router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, email, password, role, municipalityId, language } = req.body;
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        municipalityId: true,
+        municipality: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+          },
+        },
+      },
+    });
 
-    // Check if the user exists
-    const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Only ADMIN can update other users
-    if (req.user.role !== 'ADMIN' && req.user.id !== id) {
-      return res.status(403).json({ error: 'Access denied' });
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Create user
+router.post('/', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+  try {
+    const { password, ...userData } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: {
+        ...userData,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        municipalityId: true,
+        municipality: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+          },
+        },
+      },
+    });
+
+    res.status(201).json(user);
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update user
+router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { password, ...userData } = req.body;
+
+    const updateData: any = { ...userData };
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
     }
 
-    // Prepare update data
-    const updateData: any = {};
-    if (name) updateData.name = name;
-    if (email) updateData.email = email;
-    if (password) updateData.password = await bcrypt.hash(password, 10);
-    if (language) updateData.language = language;
-
-    // Only ADMIN can update role and municipalityId
-    if (req.user.role === 'ADMIN') {
-      if (role) updateData.role = role;
-      if (municipalityId !== undefined) updateData.municipalityId = municipalityId;
-    }
-
-    const updatedUser = await prisma.user.update({
+    const user = await prisma.user.update({
       where: { id },
       data: updateData,
       select: {
@@ -45,15 +120,34 @@ router.patch('/:id', authenticateToken, async (req: Request, res: Response) => {
         email: true,
         role: true,
         municipalityId: true,
-        language: true,
-        createdAt: true,
-        updatedAt: true
-      }
+        municipality: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+          },
+        },
+      },
     });
 
-    res.json(updatedUser);
+    res.json(user);
   } catch (error) {
     console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete user
+router.delete('/:id', authenticateToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.user.delete({
+      where: { id },
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

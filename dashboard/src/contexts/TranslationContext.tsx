@@ -65,7 +65,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     const fetchTranslations = async () => {
       try {
         const response = await api.get('/translations');
-        const translationData = response.data;
+        const translationData = Array.isArray(response.data) ? response.data : response.data.data;
         
         const organized: Translations = {};
         translationData.forEach((item: any) => {
