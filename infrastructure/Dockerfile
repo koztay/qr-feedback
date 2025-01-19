@@ -46,7 +46,8 @@ COPY backend/package.json ./backend/
 
 # Install production dependencies and Prisma
 RUN yarn workspace backend install --production --frozen-lockfile && \
-    yarn workspace backend add @prisma/client@5.22.0 prisma@5.22.0
+    yarn workspace backend add @prisma/client@5.22.0 && \
+    yarn workspace backend add prisma@5.22.0 --dev
 
 # Copy built files from builder stage
 COPY --from=builder /app/backend/dist ./backend/dist
