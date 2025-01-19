@@ -25,8 +25,8 @@ WORKDIR /app/backend
 # Generate Prisma client and types
 RUN yarn prisma generate
 
-# Check TypeScript types
-RUN yarn tsc --noEmit
+# Check TypeScript types with verbose output
+RUN yarn tsc --noEmit --pretty
 
 # Build TypeScript
 RUN yarn build

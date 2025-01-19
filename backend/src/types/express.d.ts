@@ -1,5 +1,5 @@
 import { UserRole } from '@prisma/client';
-import { RequestHandler } from 'express';
+import { RequestHandler, Request } from 'express';
 
 declare global {
   namespace Express {
@@ -14,13 +14,13 @@ declare global {
   }
 }
 
-export type TypedRequestHandler<P = any> = RequestHandler<
-  any,
-  any,
-  P,
-  any,
-  Record<string, any>
->;
+export type AsyncRequestHandler<
+  P = any,
+  ResBody = any,
+  ReqBody = any
+> = (
+  ...args: Parameters<RequestHandler<P, ResBody, ReqBody>>
+) => Promise<void | any> | void | any;
 
 // Need to be exported to be treated as a module
 export {}; 
