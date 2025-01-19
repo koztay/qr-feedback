@@ -35,7 +35,9 @@ WORKDIR /app/backend
 # Generate Prisma client and build
 RUN yarn prisma generate && \
     yarn tsc --project tsconfig.json && \
-    yarn tsc scripts/seed-translations.ts --outDir dist/scripts
+    yarn tsc scripts/seed-translations.ts --outDir dist/scripts && \
+    echo "Checking compiled files:" && \
+    ls -la dist/scripts/
 
 # Start a new stage for production
 FROM node:18-alpine
@@ -54,6 +56,13 @@ RUN yarn install --production --frozen-lockfile
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/prisma ./prisma
 COPY --from=builder /app/backend/scripts/ ./scripts/
+
+# Verify files after copying
+RUN echo "Verifying files in production stage:" && \
+    echo "Contents of /app/backend/dist/scripts:" && \
+    ls -la /app/backend/dist/scripts && \
+    echo "Contents of /app/backend/scripts:" && \
+    ls -la /app/backend/scripts
 
 # Generate Prisma client
 RUN yarn add @prisma/client@5.22.0 && \
