@@ -4,7 +4,7 @@ FROM node:18-alpine as builder
 WORKDIR /app
 
 # Install build dependencies
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++ openssl
 
 # Copy workspace configuration
 COPY package.json yarn.lock ./
@@ -37,12 +37,16 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Install production dependencies
+RUN apk add --no-cache openssl
+
 # Copy package files
 COPY package.json yarn.lock ./
 COPY backend/package.json ./backend/
 
-# Install production dependencies only
-RUN yarn workspace backend install --production --frozen-lockfile
+# Install production dependencies and Prisma CLI
+RUN yarn workspace backend install --production --frozen-lockfile && \
+    yarn workspace backend add prisma --dev
 
 # Copy built files from builder stage
 COPY --from=builder /app/backend/dist ./backend/dist
