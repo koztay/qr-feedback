@@ -82,9 +82,6 @@ jobs:
           envs: REGISTRY,IMAGE_NAME
           script: |
             cd /app
-            # Create necessary directories
-            mkdir -p backend/node_modules backend/dist
-            # Deploy containers
             docker-compose -f docker-compose.prod.yml pull
             docker-compose -f docker-compose.prod.yml up -d
 

@@ -57,6 +57,10 @@ COPY --from=builder /app/backend/prisma ./backend/prisma
 WORKDIR /app/backend
 RUN yarn prisma generate
 
+# Create and declare volumes
+RUN mkdir -p /app/backend/node_modules /app/backend/dist
+VOLUME ["/app/backend/node_modules", "/app/backend/dist"]
+
 # Expose the port
 EXPOSE 3000
 
