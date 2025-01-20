@@ -90,6 +90,9 @@ jobs:
             sleep 30
             # Start backend
             docker-compose -f docker-compose.prod.yml up -d backend
+            # Verify container contents
+            echo "Verifying container contents..."
+            docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'ls -la /app/backend/dist/ && echo "\nContents of scripts dir:" && ls -la /app/backend/dist/scripts || echo "scripts dir not found"'
             # Check services
             docker-compose -f docker-compose.prod.yml ps
 
@@ -154,6 +157,6 @@ jobs:
               
               # Run seeding
               echo "Running seed translations..."
-              yarn ts-node dist/scripts/seed-translations.js
+              node dist/scripts/seed-translations.js
             '
           capture_stdout: true 
