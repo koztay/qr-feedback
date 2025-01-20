@@ -1,0 +1,51 @@
+# Dependencies
+**/node_modules
+**/.pnp
+**/.pnp.js
+
+# Environment files
+**/.env
+**/.env.*
+!**/.env.example
+
+# Build outputs
+**/dist
+**/build
+**/.next
+**/out
+**/.expo
+**/web-build
+
+# Testing
+**/coverage
+
+# Debug logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+
+# IDE
+**/.idea
+**/.vscode
+**/*.swp
+**/*.swo
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Mobile app specific
+mobile-app/
+dashboard/
+docs/
+
+# Git
+.git
+.gitignore
+
+# Other
+**/*.log
+**/*.tmp
+**/.temp
+**/.cache 
