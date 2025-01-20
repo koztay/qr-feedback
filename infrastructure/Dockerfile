@@ -17,9 +17,7 @@ WORKDIR /app/backend
 
 # Generate Prisma client and build TypeScript files (including scripts)
 RUN yarn prisma generate && \
-    yarn tsc --project tsconfig.json && \
-    mkdir -p dist/scripts && \
-    cp scripts/seed-translations.js dist/scripts/
+    yarn tsc --project tsconfig.json
 
 # Start a new stage for production
 FROM node:18-alpine
