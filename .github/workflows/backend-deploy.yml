@@ -149,27 +149,27 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /app
-            # URL encode the password and run seeding
-            docker-compose -f docker-compose.prod.yml exec -T backend sh -c '
-              set -e
-              set -x
-              ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
-              export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
-              echo "Running seed translations..."
-              echo "Current directory structure:"
-              ls -la /app/backend
-              echo "\nContents of dist directory:"
-              ls -la /app/backend/dist
-              echo "\nContents of dist/scripts directory:"
-              ls -la /app/backend/dist/scripts || echo "dist/scripts directory not found"
-              echo "\nAttempting to run seeding script..."
-              if [ -f /app/backend/dist/scripts/seed-translations.js ]; then
-                echo "Found seeding script, executing..."
-                node dist/scripts/seed-translations.js
-              else
-                echo "Error: seeding script not found at expected location"
-                exit 1
-              fi
-            '
+            set -x
+            cd /app/backend
+            # Preserve compiled files
+            echo "Preserving compiled files..."
+            mkdir -p /tmp/dist_backup
+            cp -r dist/* /tmp/dist_backup/
+            
+            # Set up database URL
+            ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
+            export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
+            
+            # Run migrations
+            echo "Running migrations..."
+            yarn prisma migrate deploy
+            
+            # Restore compiled files
+            echo "Restoring compiled files..."
+            cp -r /tmp/dist_backup/* dist/
+            rm -rf /tmp/dist_backup
+            
+            # Run seeding
+            echo "Running seed translations..."
+            yarn ts-node dist/scripts/seed-translations.js
           capture_stdout: true 
