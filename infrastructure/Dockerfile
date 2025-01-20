@@ -21,9 +21,13 @@ WORKDIR /app/backend
 
 # Generate Prisma client and build TypeScript files (including scripts)
 RUN yarn prisma generate && \
+    # Ensure scripts directory exists in dist before compilation
+    mkdir -p dist/scripts && \
+    # Build TypeScript files
     yarn tsc --project tsconfig.json && \
+    # Verify the files exist
     echo "Checking compiled output:" && \
-    ls -la dist/scripts || echo "dist/scripts not found" && \
+    ls -la dist/scripts && \
     echo "Checking source scripts:" && \
     ls -la scripts
 
