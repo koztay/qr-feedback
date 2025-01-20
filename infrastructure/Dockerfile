@@ -14,7 +14,11 @@ RUN yarn install --frozen-lockfile
 
 # Set working directory to backend and build
 WORKDIR /app/backend
-RUN yarn prisma generate && yarn build
+
+# Generate Prisma client and build TypeScript files (including scripts)
+RUN yarn prisma generate && \
+    yarn tsc --project tsconfig.json && \
+    yarn tsc scripts/seed-translations.ts --outDir dist/scripts
 
 # Start a new stage for production
 FROM node:18-alpine
@@ -32,7 +36,6 @@ RUN yarn install --production --frozen-lockfile
 # Copy built files, prisma schema, and scripts
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/prisma ./prisma
-COPY --from=builder /app/backend/scripts ./scripts
 
 # Generate Prisma client
 RUN yarn add @prisma/client@5.22.0 && \
