@@ -160,21 +160,25 @@ jobs:
             # Run migrations and seeding inside the container
             docker-compose -f docker-compose.prod.yml exec -T backend sh -c '
               set -x
+              
+              # Check container state right after startup
+              echo "Checking initial container state..."
+              pwd
+              ls -la /app/backend
+              ls -la /app/backend/dist || echo "dist not found"
+              ls -la /app/backend/dist/scripts || echo "scripts not found"
+              
               # Set up database URL
               ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
               export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
-              
-              # Verify files again before seeding
-              echo "Verifying files before seeding..."
-              ls -la /app/backend/dist/scripts || echo "scripts dir not found"
               
               # Run migrations
               echo "Running migrations..."
               yarn prisma migrate deploy
               
-              # Verify files before running seeding
-              echo "Verifying files before seeding..."
-              ls -la /app/backend/dist/scripts || echo "scripts dir not found"
+              # Check state after migrations
+              echo "Checking state after migrations..."
+              ls -la /app/backend/dist/scripts || echo "scripts not found after migrations"
               
               # Run seeding
               echo "Running seed translations..."
