@@ -9,8 +9,9 @@
 !**/.env.example
 
 # Build outputs
-**/dist
-**/build
+mobile-app/dist
+dashboard/dist
+docs/dist
 **/.next
 **/out
 **/.expo
