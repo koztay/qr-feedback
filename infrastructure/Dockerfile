@@ -1,4 +1,4 @@
-FROM node:18-alpine as builder
+FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
@@ -26,27 +26,6 @@ RUN yarn prisma generate && \
     ls -la dist/scripts || echo "dist/scripts not found" && \
     echo "Checking source scripts:" && \
     ls -la scripts
-
-# Start a new stage for production
-FROM node:18-alpine
-
-WORKDIR /app/backend
-
-# Install production dependencies
-RUN apk add --no-cache openssl
-
-# Copy package files and install dependencies
-COPY --from=builder /app/package.json /app/yarn.lock /app/
-COPY --from=builder /app/backend/package.json ./
-RUN yarn install --production --frozen-lockfile
-
-# Copy entire backend directory from builder
-COPY --from=builder /app/backend ./
-
-# Generate Prisma client
-RUN yarn add @prisma/client@5.22.0 && \
-    yarn add prisma@5.22.0 --dev && \
-    yarn prisma generate
 
 EXPOSE 3000
 
