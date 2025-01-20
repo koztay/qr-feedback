@@ -19,12 +19,12 @@ COPY backend ./backend
 # Set working directory to backend and build
 WORKDIR /app/backend
 
-# Generate Prisma client and build TypeScript files (including scripts)
+# Generate Prisma client and build TypeScript files
 RUN yarn prisma generate && \
-    # Ensure scripts directory exists in dist before compilation
-    mkdir -p dist/scripts && \
-    # Build TypeScript files
-    yarn tsc --project tsconfig.json
+    # Build TypeScript files (including scripts)
+    yarn tsc --project tsconfig.json && \
+    # Verify the compiled files exist
+    ls -la dist/scripts/
 
 EXPOSE 3000
 

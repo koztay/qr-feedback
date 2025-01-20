@@ -101,15 +101,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn workspace backend install
-
       - name: Wait for database to be ready
         uses: appleboy/ssh-action@master
         with:
