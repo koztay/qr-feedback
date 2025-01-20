@@ -13,12 +13,13 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@scripts/*": ["scripts/*"]
     },
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["src/**/*", "src/types/*.d.ts", "scripts/**/*"],
+  "include": ["src/**/*", "scripts/**/*"],
   "exclude": ["node_modules", "dist"]
 } 
