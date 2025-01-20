@@ -13,7 +13,7 @@ COPY backend/package.json ./backend/
 # Install dependencies
 RUN yarn install --frozen-lockfile
 
-# Copy entire backend directory
+# Copy backend directory
 COPY backend ./backend
 
 # Set working directory to backend and build
@@ -24,12 +24,7 @@ RUN yarn prisma generate && \
     # Ensure scripts directory exists in dist before compilation
     mkdir -p dist/scripts && \
     # Build TypeScript files
-    yarn tsc --project tsconfig.json && \
-    # Verify the files exist
-    echo "Checking compiled output:" && \
-    ls -la dist/scripts && \
-    echo "Checking source scripts:" && \
-    ls -la scripts
+    yarn tsc --project tsconfig.json
 
 EXPOSE 3000
 
