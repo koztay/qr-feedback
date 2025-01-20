@@ -90,11 +90,18 @@ jobs:
             sleep 30
             # Start backend
             docker-compose -f docker-compose.prod.yml up -d backend
-            # Verify container contents
-            echo "Verifying container contents..."
+            
+            # Initial verification
+            echo "Verifying container contents immediately after startup..."
             docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'ls -la /app/backend/dist/ && echo "\nContents of scripts dir:" && ls -la /app/backend/dist/scripts || echo "scripts dir not found"'
-            # Check services
+            
+            # Check container status
+            echo "Container status:"
             docker-compose -f docker-compose.prod.yml ps
+            
+            # Check container logs
+            echo "Container logs:"
+            docker-compose -f docker-compose.prod.yml logs backend
 
   database-migrations:
     needs: build-and-deploy
@@ -103,6 +110,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          clean: false
 
       - name: Wait for database to be ready
         uses: appleboy/ssh-action@master
@@ -144,6 +153,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /app
+            # Verify files before running migrations
+            echo "Verifying files before migrations..."
+            docker-compose -f docker-compose.prod.yml exec -T backend sh -c 'ls -la /app/backend/dist/scripts || echo "scripts dir not found"'
+            
             # Run migrations and seeding inside the container
             docker-compose -f docker-compose.prod.yml exec -T backend sh -c '
               set -x
@@ -151,9 +164,17 @@ jobs:
               ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
               export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
               
+              # Verify files again before seeding
+              echo "Verifying files before seeding..."
+              ls -la /app/backend/dist/scripts || echo "scripts dir not found"
+              
               # Run migrations
               echo "Running migrations..."
               yarn prisma migrate deploy
+              
+              # Verify files before running seeding
+              echo "Verifying files before seeding..."
+              ls -la /app/backend/dist/scripts || echo "scripts dir not found"
               
               # Run seeding
               echo "Running seed translations..."
