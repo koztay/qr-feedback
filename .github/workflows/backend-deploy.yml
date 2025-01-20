@@ -149,27 +149,20 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            set -x
-            cd /app/backend
-            # Preserve compiled files
-            echo "Preserving compiled files..."
-            mkdir -p /tmp/dist_backup
-            cp -r dist/* /tmp/dist_backup/
-            
-            # Set up database URL
-            ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
-            export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
-            
-            # Run migrations
-            echo "Running migrations..."
-            yarn prisma migrate deploy
-            
-            # Restore compiled files
-            echo "Restoring compiled files..."
-            cp -r /tmp/dist_backup/* dist/
-            rm -rf /tmp/dist_backup
-            
-            # Run seeding
-            echo "Running seed translations..."
-            yarn ts-node dist/scripts/seed-translations.js
+            cd /app
+            # Run migrations and seeding inside the container
+            docker-compose -f docker-compose.prod.yml exec -T backend sh -c '
+              set -x
+              # Set up database URL
+              ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
+              export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
+              
+              # Run migrations
+              echo "Running migrations..."
+              yarn prisma migrate deploy
+              
+              # Run seeding
+              echo "Running seed translations..."
+              yarn ts-node dist/scripts/seed-translations.js
+            '
           capture_stdout: true 
