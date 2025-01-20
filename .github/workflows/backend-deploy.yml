@@ -142,21 +142,32 @@ jobs:
               yarn prisma migrate deploy
             '
 
-      - name: Seed translations
+      - name: Run database migrations and seed data
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
           script: |
             cd /app
             # URL encode the password and run seeding
             docker-compose -f docker-compose.prod.yml exec -T backend sh -c '
-            ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
-            export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
-            echo "Running seed translations..."
-            echo "Current directory structure:"
-            ls -R /app/backend
-            echo "Attempting to run seeding script..."
-            cd /app/backend && node dist/scripts/seed-translations.js
+              set -e
+              ENCODED_PASSWORD=$(echo $POSTGRES_PASSWORD | sed "s|/|%2F|g" | sed "s|=|%3D|g")
+              export DATABASE_URL="postgresql://postgres:$ENCODED_PASSWORD@postgres:5432/municipal_feedback"
+              echo "Running seed translations..."
+              echo "Current directory structure:"
+              ls -la /app/backend
+              echo "\nContents of dist directory:"
+              ls -la /app/backend/dist
+              echo "\nContents of dist/scripts directory:"
+              ls -la /app/backend/dist/scripts || echo "dist/scripts directory not found"
+              echo "\nAttempting to run seeding script..."
+              if [ -f /app/backend/dist/scripts/seed-translations.js ]; then
+                echo "Found seeding script, executing..."
+                node dist/scripts/seed-translations.js
+              else
+                echo "Error: seeding script not found at expected location"
+                exit 1
+              fi
             ' 
