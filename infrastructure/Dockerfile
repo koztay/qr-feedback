@@ -6,7 +6,7 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache python3 make g++ openssl
 
-# Copy entire workspace
+# Copy entire workspace (including scripts directory after .dockerignore update)
 COPY . .
 
 # Install dependencies
